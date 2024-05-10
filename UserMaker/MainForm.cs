@@ -13,6 +13,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using System.Data;
 using Microsoft.VisualBasic.ApplicationServices;
 using System.Security.AccessControl;
+using UserMaker.Class;
 
 namespace UserMaker
 {
@@ -32,6 +33,12 @@ namespace UserMaker
 			verify.Click += verifyUser_btnClick;
 
 		}
+
+
+
+
+
+
 		//UNDERCONTRUCTION!!!
 		//ISSUE: The address list does not close after selecting an address
 		//Update1: Addedd a 'Close' button in the address Form
@@ -282,16 +289,16 @@ namespace UserMaker
 				// Set user attributes //Unknown user attributes 
 				newUser.Properties["givenName"].Value = inputFNAME.Text;
 
-				
+
 				// When a user does not have a last name. Do not update the attributes
 				// ! inverts the function of the statement.
-				if (!String.IsNullOrEmpty(inputLNAME.Text)) 
+				if (!String.IsNullOrEmpty(inputLNAME.Text))
 				{
 					newUser.Properties["sn"].Value = inputLNAME.Text;
 					newUser.Properties["displayName"].Value = inputFNAME.Text + " " + inputLNAME.Text;
-					
+
 				}
-				
+
 
 				newUser.Properties["mail"].Value = UPN;
 				newUser.Properties["userPrincipalName"].Value = UPN;
@@ -318,13 +325,13 @@ namespace UserMaker
 				{
 					newUser.Properties["postalCode"].Value = zipBox.Text;
 				}
-				//newUser.Properties["Job Title"].Value = jTitle.Text;
+				newUser.Properties["OUe"].Value = OUBox.Text;
 
 				// Save the user object to Active Directory
 				newUser.CommitChanges();
-				
+
 				MessageBox.Show("User created successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-				
+
 			}
 			catch (Exception ex)
 			{
@@ -404,6 +411,7 @@ namespace UserMaker
 					passwordCheckBox.Checked = false;
 				}
 			}
+
 			// clear button will also clear the highlights showing the missing field
 			inputFNAME.BackColor = SystemColors.Window;
 
@@ -412,10 +420,6 @@ namespace UserMaker
 			passwordBox.BackColor = SystemColors.Window;
 
 			reportManager.BackColor = SystemColors.Window;
-
-			
-
-
 
 			cCode.BackColor = SystemColors.Window;
 
@@ -524,10 +528,33 @@ namespace UserMaker
 		{
 
 		}
-
-		private void organisationalUnit_Click(object sender, EventArgs e)
+		private void organisationalUnit_comboBox(object sender, EventArgs e)
 		{
-			
+
 		}
+		#region DIRECTLY SEARCH FOR THE ORGANISATIONAL UNITS FROM THE DIRECTORY. 
+		private void ouList_Click(object sender, EventArgs e)
+		{
+			// Instantiate the class to retrieve organizational units
+			For_Organisational_unit ouFetcher = new For_Organisational_unit();
+
+			// Retrieve the organizational units
+			string[] organizationalUnits = ouFetcher.Load_OU();
+
+			// Populate the ComboBox with the retrieved organizational units
+			if (organizationalUnits != null)
+			{
+				OUBox.Items.AddRange(organizationalUnits);
+				//MessageBox.Show(organizationalUnits);
+			}
+			else
+			{
+				MessageBox.Show("Failed to retrieve organizational units.");
+			}
+		}
+		#endregion
 	}
+
 }
+	
+

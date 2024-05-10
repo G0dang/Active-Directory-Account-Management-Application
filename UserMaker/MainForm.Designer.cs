@@ -70,7 +70,7 @@ namespace UserMaker
 			label5 = new Label();
 			inputFNAME = new TextBox();
 			fName = new Label();
-			comboBox1 = new ComboBox();
+			OUBox = new ComboBox();
 			SuspendLayout();
 			// 
 			// lName
@@ -504,13 +504,15 @@ namespace UserMaker
 			fName.Text = "First Name *";
 			fName.Click += label1_Click_1;
 			// 
-			// comboBox1
+			// OUBox
 			// 
-			comboBox1.FormattingEnabled = true;
-			comboBox1.Location = new Point(217, 409);
-			comboBox1.Name = "comboBox1";
-			comboBox1.Size = new Size(186, 23);
-			comboBox1.TabIndex = 47;
+			OUBox.FormattingEnabled = true;
+			OUBox.Location = new Point(217, 409);
+			OUBox.Name = "OUBox";
+			OUBox.Size = new Size(186, 23);
+			OUBox.TabIndex = 47;
+			OUBox.SelectedIndexChanged += organisationalUnit_comboBox;
+			OUBox.Click += ouList_Click;
 			// 
 			// adminLogin
 			// 
@@ -519,7 +521,7 @@ namespace UserMaker
 			AutoScroll = true;
 			BackColor = Color.LightBlue;
 			ClientSize = new Size(817, 547);
-			Controls.Add(comboBox1);
+			Controls.Add(OUBox);
 			Controls.Add(label5);
 			Controls.Add(label4);
 			Controls.Add(label3);
@@ -612,6 +614,6 @@ namespace UserMaker
 		private Label label5;
 		private TextBox inputFNAME;
 		private Label fName;
-		private ComboBox comboBox1;
+		private ComboBox OUBox;
 	}
 }

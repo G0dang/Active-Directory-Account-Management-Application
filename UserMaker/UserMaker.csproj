@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <None Include="bin\Debug\Database1.mdf" />
+    <None Include="bin\Debug\Database1_log.ldf" />
   </ItemGroup>
 
   <ItemGroup>
