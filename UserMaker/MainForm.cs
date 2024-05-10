@@ -209,20 +209,6 @@ namespace UserMaker
 			}
 			reportManager.BackColor = SystemColors.Window;
 
-
-			if (string.IsNullOrWhiteSpace(organisationUnit.Text))
-			{
-				organisationUnit.BackColor = Color.OrangeRed;
-				MessageBox.Show("Please fill the highlighted field", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				return;
-			}
-			organisationUnit.BackColor = SystemColors.Window;
-
-
-
-
-
-
 			if (string.IsNullOrWhiteSpace(cCode.Text))
 			{
 				cCode.BackColor = Color.OrangeRed;
@@ -427,7 +413,7 @@ namespace UserMaker
 
 			reportManager.BackColor = SystemColors.Window;
 
-			organisationUnit.BackColor = SystemColors.Window;
+			
 
 
 
