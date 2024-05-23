@@ -30,7 +30,10 @@ namespace UserMaker.Class
 					for (int i = 0; i < results.Count; i++)
 					{
 						DirectoryEntry entry = results[i].GetDirectoryEntry();
-						organizationalUnits[i] = entry.Name;
+						//Exclude "OU=" prefix in the list
+						//Helps to store the attribute value in the diorectory without any issue.
+						string ouName = entry.Name.Substring(3); 
+						organizationalUnits[i] = ouName;
 					}
 					return organizationalUnits;
 				}
