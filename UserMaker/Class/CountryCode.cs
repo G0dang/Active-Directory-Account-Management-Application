@@ -9,7 +9,7 @@ namespace UserMaker.Class
 		public static readonly Dictionary<string, string> CountryCodes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
 		{
 			{"Australia","AU"},
-			{ "United States","US"},
+			{"United States","US"},
 			{"China","CN"},
 			{"Hong Kong","HK"},
 			{"India","IN"},
@@ -22,7 +22,8 @@ namespace UserMaker.Class
 			{"Philippines","PH"},
 			{"Singapore","SG"},
 			{"South Africa","SG"},
-			{"Vietnam","VN"}
+			{"Vietnam","VN"},
+			{"Japan","JP"}
 		};
 
 
