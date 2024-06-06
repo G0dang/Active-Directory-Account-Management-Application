@@ -267,6 +267,7 @@ namespace UserMaker
 			disclaimerSuffix.Name = "disclaimerSuffix";
 			disclaimerSuffix.Size = new Size(185, 28);
 			disclaimerSuffix.TabIndex = 5;
+			disclaimerSuffix.Text = "EN";
 			// 
 			// cCenter
 			// 
