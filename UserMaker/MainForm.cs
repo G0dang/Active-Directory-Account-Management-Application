@@ -426,6 +426,7 @@ namespace UserMaker
 						}
 
 						#endregion
+
 						#region To use company name for the searching the domain 
 						if (field.name=="CFEmployeeCompany")
 						{
@@ -436,10 +437,9 @@ namespace UserMaker
 
 							CompanyName = CompanyName.Replace(" ", "");
 							domainFinder.SelectComboBoxItemContains(domainList,CompanyName);
-
-
 						}
 						#endregion
+
 						if (field.name == "CFEmployeeAddress")
 						{
 							ticketInfo += $"{field.name}: {field.display}\n";
@@ -623,6 +623,10 @@ namespace UserMaker
 					newUser.Properties["postalCode"].Value = zipBox.Text;
 				}
 
+				if (!String.IsNullOrEmpty("disclaimerSuffix"))
+				{
+					newUser.Properties["scriptPath"].Value = $"Disclaimer.exe {disclaimerSuffix.Text}";
+				}
 
 				newUser.Properties["company"].Value = CompanyName;
 				newUser.Properties["ou"].Value = OUBox.Text;
