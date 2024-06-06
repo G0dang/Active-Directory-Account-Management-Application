@@ -45,7 +45,6 @@ namespace UserMaker
 
 			}
 		}
-		
 
 		#region LOAD CSV (Address List) FROM A NEW FORM
 		private void addressCSV_Load(object sender, EventArgs e)
@@ -75,7 +74,6 @@ namespace UserMaker
 						string[] rows = sr.ReadLine().Split(';');
 						
 						dt.Rows.Add(rows);
-
 					}
 				}
 
@@ -127,14 +125,6 @@ namespace UserMaker
 				MessageBox.Show("Please select an address first.");
 			}
 			#endregion
-		}
-
-
-		//this button is redundant now
-		private void closeAddressForm_btnClick(object sender, EventArgs e)
-		{
-			Close();
-
 		}
 	}
 }
