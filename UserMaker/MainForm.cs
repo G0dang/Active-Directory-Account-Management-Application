@@ -1,7 +1,6 @@
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.DirectoryServices.ActiveDirectory;
-using System.Drawing.Text;
 using System.Text;
 using System;
 using System.DirectoryServices;
@@ -14,6 +13,20 @@ using System.Data;
 using Microsoft.VisualBasic.ApplicationServices;
 using System.Security.AccessControl;
 using UserMaker.Class;
+using System.Linq.Expressions;
+using System.IO;
+using MaterialSkin.Controls;
+using Newtonsoft.Json;
+using RestSharp;
+using CsvHelper;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Globalization;
+using System.Threading.Tasks;
+using System.Net.Security;
+
+
+
 
 namespace UserMaker
 {
@@ -21,8 +34,16 @@ namespace UserMaker
 	{
 		//establich connection to the Active Directory Folder in the domain
 		private const string OUDN = "OU=Aayush Test,OU=Accounts,DC=internal,DC=detmold,DC=com,DC=au";
+		
+		//this declarations are all the credentials needed for the detmold uat api authentication
+		private static readonly string apiBaseUrl = "https://detmoldgroupuat.haloitsm.com";
+		
+		private static string username = "Aayush Gurung";
+		private static string password = "DetmoldGroupUAT2024!";
+		private static string clientID = "2c45fe93-3daa-40b2-9533-e2fd19df7dc3";
 
-		//check if the addressBox is empty so "close' button in AddressForm can call this method
+		private DNFinder dnFinder;
+		private string managerDistinguishedName;
 		public adminLogin()
 		{
 			InitializeComponent();
@@ -32,19 +53,78 @@ namespace UserMaker
 			verify.Click -= verifyUser_btnClick;
 			verify.Click += verifyUser_btnClick;
 
+			//initially the progressbar is hidden
+			progressBar_RM.Visible = false;
+
+			btnClearForm.Click += btnClearForm_Click;
+
+			dnFinder = new DNFinder();
+
 		}
 
+		#region MAIN FORM | METHOD/s HERE LOADs ON RUN
+		private async void MainForm_Load(object sender, EventArgs e)
+		{
+			#region Calling Load_RM method and set up asynchronous Task for regional manager loading 
+			//using try catch statement to show the progress bar when loading regional manager
+			try
+			{
+				// Show the progress bar
+				progressBar_RM.Visible = true;
+				progressBar_RM.Style = ProgressBarStyle.Marquee;
+				progressBar_RM.MarqueeAnimationSpeed = 30;
+
+				UserInformation[] userInformations = await LoadRegionalManagersAsync();
+				UserInformation[] users = userInformations;
+
+				if (users != null && users.Length > 0)
+				{
+					//sort the list in an alphabetical order
+					//using LINQ method to order it alphabetically before binding it to the RMBox.
+					users = users.OrderBy(u => u.DisplayName).ToArray();
+
+					RMBox.DisplayMember = "DisplayName";
+					RMBox.ValueMember = "DistinguishedName";
+					RMBox.DataSource = users;
+				}
+				else
+				{
+					MessageBox.Show("Failed to retrieve regional managers data.");
+				}
+			}
+			catch (Exception ex)
+			{
+
+				MessageBox.Show($"An error occurred: {ex.Message}");
+			}
+			finally
+			{
+				// Hide the progress bar when loading is complete
+				progressBar_RM.Visible = false;
+				
+
+			}
+			#endregion
+		}
+		#endregion
 
 
+		#region method will load the regional  manager list
+		private void RMBox_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			if (RMBox.SelectedItem != null)
+			{
+				UserInformation selectedUser = (UserInformation)RMBox.SelectedItem;
+				string displayName = selectedUser.DisplayName;
+				string distinguishedName = selectedUser.DistinguishedName;
+				
+				
+			}
+		}
+		#endregion
 
 
-
-		//UNDERCONTRUCTION!!!
-		//ISSUE: The address list does not close after selecting an address
-		//Update1: Addedd a 'Close' button in the address Form
-		//Update2: Added Close() function in the 'select' button
 		#region  load the selected item from the addressCSV
-
 
 		public void UpdateAddressTextBox(string column1, string column2, string column3, string column4, string column5)
 		{
@@ -94,7 +174,34 @@ namespace UserMaker
 		#endregion
 
 
+		#region creating a task for regional manager so that it does not block the UI while loading the data from the database
+		private async Task<UserInformation[]> LoadRegionalManagersAsync()
+		{
+			For_RegionalManager regionalManagerLoader = new For_RegionalManager();
+			return await Task.Run(() => regionalManagerLoader.Load_RM());
+		}
+		#endregion
+
+
 		#region VARIOUS Event Handlers
+		private void label1_Click(object sender, EventArgs e)
+		{
+
+		}
+
+		private void label3_Click(object sender, EventArgs e)
+		{
+
+		}
+		private void organisationalUnit_comboBox(object sender, EventArgs e)
+		{
+
+		}
+
+		private void ouList_Click(object sender, EventArgs e)
+		{
+		}
+
 		private void button1_Click(object sender, EventArgs e)
 		{
 
@@ -124,10 +231,7 @@ namespace UserMaker
 		{
 		}
 
-		private void Form1_Load(object sender, EventArgs e)
-		{
 
-		}
 		#endregion
 
 
@@ -175,6 +279,171 @@ namespace UserMaker
 		#endregion
 
 
+		#region For TICKET SEARCH button click event
+		private async void searchTicket_btnClick(object sender, EventArgs e)
+		{
+			string ticketID = ticketID_textbox.Text;
+			if (string.IsNullOrEmpty(ticketID))
+			{
+				MessageBox.Show("Enter the ticket ID", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return;
+			}
+
+			string accessToken = await AuthenticateAsync(username, password, clientID);
+
+			if (accessToken != null)
+			{
+				var ticket = await GetTicketAsync(ticketID, accessToken);
+				
+				
+				if (ticket != null)
+				{
+					string ticketInfo = $"Ticket ID: {ticket.id}\nTicket Summary: {ticket.summary}\nDetails:\n";
+
+					bool isNewUserRequest = false;
+
+
+					var cityDict = new CityDictionary();
+					string postcode = string.Empty;
+					string city = string.Empty;
+
+					#region for separating employee addressssss
+					//compare the string of the name in the customfields. If the string matches, display and fill the values accordingly.
+					foreach (var field in ticket.customfields)
+					{
+
+						if (field.name == "CFEmployeeAddress")
+						{
+							string address = field.display;
+							//checking if the address in the ticket contains a city name as well as the post code
+							city = cityDict.Cities.Keys.FirstOrDefault(c => address.Contains(c)) ?? ""; //c=>address.Contains(c) is used as a predicate
+
+							if (!string.IsNullOrEmpty(city))
+							{
+								ticketInfo += $"City: {city}\n";
+								cityBox.Text = city;
+
+								// Find the postcode in the address
+								if (cityDict.Cities.TryGetValue(city, out var postcodes))
+								{
+									postcode = postcodes.FirstOrDefault(pc => address.Contains(pc)) ?? "";
+
+									if (!string.IsNullOrEmpty(postcode))
+									{
+										ticketInfo += $"Postcode: {postcode}\n";
+										zipBox.Text = postcode;
+
+										// Remove city and postcode from address
+										address = address.Replace(city, "").Replace(postcode, "").Trim();
+									}
+								}
+													
+							}
+							else
+							{
+								// Check for empty string key (where the address does not copntain city name but has post code)
+								if (cityDict.Cities.TryGetValue("", out var postcodes))
+								{
+									postcode = postcodes.FirstOrDefault(pc => address.Contains(pc)) ?? "";
+
+									if (!string.IsNullOrEmpty(postcode))
+									{
+										ticketInfo += $"Postcode: {postcode}\n";
+										zipBox.Text = postcode;
+
+										// Remove postcode from address
+										address = address.Replace(postcode, "").Trim();
+									}
+
+									cityBox.Text = ""; // No specific city found
+								}
+								else
+								{
+									cityBox.Text = "";
+									zipBox.Text = "";
+								}
+							}
+							// Update the street address
+							streetBox.Text = address.Trim();
+						}
+						#endregion
+
+						#region Populating textboxes witht the information from the ticket
+						//populating text boxes here by grabbing the details from the ticket
+						if (field.name == "CFfirstName")
+						{
+							inputFNAME.Text = field.display.Trim();
+						}
+						if (field.name == "CFlastName")
+						{
+							inputLNAME.Text = field.display.Trim();
+						}
+						if (field.name == "CFJobTitle")
+						{
+							jTitle.Text = field.display.Trim();
+
+						}
+						if (field.name == "CFEmployeeCountry")
+						{
+							countryBox.Text = field.display.Trim();
+						}
+						if (field.name == "CFEmployeeState")
+						{
+							stateBox.Text = field.display.Trim();
+						}
+						#endregion
+
+						#region searching the DN of the manager name we got from the ticket.
+
+						if (field.name == "CFEmployeeManager")
+						{
+							if (!string.IsNullOrEmpty(field.display))
+							{
+								RMBox.Enabled = false; //disable the reginal manager combobox.
+								string managerName = field.display;
+
+								// Find the distinguished name of the manager
+								managerDistinguishedName = dnFinder.FindUserDistinguishedName(managerName);
+
+								// Check if the distinguished name was found
+								if (managerDistinguishedName != null)
+								{
+									// Set the display manager name in the box but the Dn will be supplied to update the user attribute
+									tempBox.Text = managerName;
+									ticketInfo += $"{field.name}: {managerDistinguishedName}\n";
+
+								}
+							}
+							else
+							{
+								// Handle the case where the manager was not found
+								MessageBox.Show("Manager not found. Select manager name from the list manually", "Note", MessageBoxButtons.OK, MessageBoxIcon.Error);
+							}
+							
+						}
+						
+						#endregion
+						
+						if (field.name == "CFEmployeeAddress")
+
+						{
+							ticketInfo += $"{field.name}: {field.display}\n";
+							isNewUserRequest = true;
+						}
+					}
+
+					if (!isNewUserRequest)
+					{
+						ticketInfo += "This ticket is not a new user request";
+					}
+
+					MessageBox.Show(ticketInfo, "Ticket Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				}
+			}
+		}
+		#endregion
+
+
 		#region CODE FOR THE 'CREATE USER' BUTTON
 		private void btnCreateUser_Click(object sender, EventArgs e)
 		{
@@ -183,67 +452,79 @@ namespace UserMaker
 			if (string.IsNullOrWhiteSpace(inputFNAME.Text))
 			{
 				//highlight the text field
-				inputFNAME.BackColor = Color.OrangeRed;
+				fName.ForeColor = Color.OrangeRed;
 				MessageBox.Show("Please fill the highlighted field", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				return;
 				// Exit the method to prevent further processing
 			}
-			inputFNAME.BackColor = SystemColors.Window;
+			fName.ForeColor = Color.Black;
 
 			if (string.IsNullOrWhiteSpace(domainList.Text))
 			{
-				domainList.BackColor = Color.OrangeRed;
-				MessageBox.Show("Please fill the highlighted field", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				dMain.ForeColor = Color.OrangeRed;
+				MessageBox.Show("Please select a domain from the list", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				return;
 			}
-			domainList.BackColor = SystemColors.Window;
+			dMain.ForeColor = Color.Black;
 
 
 			if (string.IsNullOrWhiteSpace(passwordBox.Text))
 			{
-				passwordBox.BackColor = Color.OrangeRed;
-				MessageBox.Show("Please create a unique password from the the password generater or create your own", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				passWord.ForeColor = Color.OrangeRed;
+				MessageBox.Show("Please create a unique password from the the password generater or create your unique own", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				return;
 			}
-			passwordBox.BackColor = SystemColors.Window;
+			passWord.ForeColor = Color.Black;
 
 
-			if (string.IsNullOrWhiteSpace(reportManager.Text))
+			if (string.IsNullOrWhiteSpace(OUBox.Text))
 			{
-				reportManager.BackColor = Color.OrangeRed;
-				MessageBox.Show("Please fill the highlighted field", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				orgUnit.ForeColor = Color.OrangeRed;
+				MessageBox.Show("Please select a organisational unit from the list", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				return;
 			}
-			reportManager.BackColor = SystemColors.Window;
+			orgUnit.ForeColor = Color.Black;
 
-			if (string.IsNullOrWhiteSpace(cCode.Text))
-			{
-				cCode.BackColor = Color.OrangeRed;
-				MessageBox.Show("Please select a country code for the user", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				return;
-			}
-			cCode.BackColor = SystemColors.Window;
 
+			//if (string.IsNullOrWhiteSpace(RMBox.Text))
+			//{
+			//	reportingManager.ForeColor = Color.OrangeRed;
+			//	MessageBox.Show("Please select a reporting manager from the list", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			//	return;
+			//}
+			//reportingManager.ForeColor = Color.Black;
 
 			if (string.IsNullOrWhiteSpace(disclaimerSuffix.Text))
 			{
-				disclaimerSuffix.BackColor = Color.OrangeRed;
+				discSuffix.ForeColor = Color.OrangeRed;
 				MessageBox.Show("Please select a Disclaimer Suffix for the user", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				return;
 			}
-			disclaimerSuffix.BackColor = SystemColors.Window;
+			discSuffix.ForeColor = Color.Black;
 
 
 			if (string.IsNullOrWhiteSpace(cCenter.Text))
 			{
-				cCenter.BackColor = Color.OrangeRed;
+				costCenter.ForeColor = Color.OrangeRed;
 				MessageBox.Show("Please select a Cost Center for the user", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				return;
 			}
-			cCenter.BackColor = SystemColors.Window;
+			costCenter.ForeColor = Color.Black;
+
+			if (string.IsNullOrWhiteSpace(streetBox.Text) &&
+				string.IsNullOrWhiteSpace(cityBox.Text) &&
+				string.IsNullOrWhiteSpace(stateBox.Text) &&
+				string.IsNullOrWhiteSpace(countryBox.Text) &&
+				string.IsNullOrWhiteSpace(zipBox.Text))
+			{
+				userAddress.ForeColor = Color.OrangeRed;
+				MessageBox.Show("Please select an address", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return;
+			}
+			userAddress.ForeColor = Color.Black;
 			#endregion
 
-
+			#region creating UPN,sAMAccount Name, directory path and so on....
 			string UPN, Pre2000;
 			if (string.IsNullOrEmpty(inputLNAME.Text))
 			{
@@ -276,8 +557,9 @@ namespace UserMaker
 					return;
 				}
 			}
+			#endregion
 
-			#region update the users attributes in the active directory
+			#region update the users attribute values in the active directory
 			try
 			{
 				// Create a DirectoryEntry object for the OU
@@ -286,8 +568,12 @@ namespace UserMaker
 				// Creating a new user object in the Organisational Unit (OU)
 				DirectoryEntry newUser = ou.Children.Add("CN=" + inputFNAME.Text + " " + inputLNAME.Text, "user");
 
+
 				// Set user attributes //Unknown user attributes 
 				newUser.Properties["givenName"].Value = inputFNAME.Text;
+				newUser.Properties["mail"].Value = UPN;
+				newUser.Properties["userPrincipalName"].Value = UPN;
+				newUser.Properties["samAccountName"].Value = Pre2000;
 
 
 				// When a user does not have a last name. Do not update the attributes
@@ -299,12 +585,8 @@ namespace UserMaker
 
 				}
 
-
-				newUser.Properties["mail"].Value = UPN;
-				newUser.Properties["userPrincipalName"].Value = UPN;
-				newUser.Properties["samAccountName"].Value = Pre2000;
-
 				//newUser.Properties["countryCode"].Value = cCode.Text; //getting error here because the attribute only accepts numeric values
+
 				if (!String.IsNullOrEmpty(streetBox.Text))
 				{
 					newUser.Properties["streetAddress"].Value = streetBox.Text;
@@ -325,9 +607,39 @@ namespace UserMaker
 				{
 					newUser.Properties["postalCode"].Value = zipBox.Text;
 				}
-				newUser.Properties["OUe"].Value = OUBox.Text;
+
+				newUser.Properties["ou"].Value = OUBox.Text;
+				newUser.Properties["title"].Value = jTitle.Text;
+
+				if (!String.IsNullOrEmpty(tempBox.Text))
+				{
+					newUser.Properties["manager"].Value = managerDistinguishedName;
+				}
+				else
+				{
+					#region [REGIONAL MANAGER ATTRIBUTE] Previously selected regional manager from the list and updated the attribute 
+					//but now this may not be need as we have loaded the manager name from the ticket and have created generated the DN name.
+					//We have retrieved the DN of the manager from the reginal manager class.
+					//update 1: regional manager will be supplied through the regional manager list selstion if the ticket returns empty manager name
+
+					if (RMBox.SelectedItem != null)
+					{
+						UserInformation selectedUser = (UserInformation)RMBox.SelectedItem;
+						string distinguishedNameOfManager = selectedUser.DistinguishedName;
+						newUser.Properties["manager"].Value = distinguishedNameOfManager;
+					}
+					#endregion
+}
+				//calling CountryCode Class in here. 
+
+				UserMaker.Class.CountryCode countryCodeUpdater = new UserMaker.Class.CountryCode();
+				countryCodeUpdater.UpdateCountryCodeInActiveDirectory(countryBox, newUser);
+
+				
+
 
 				// Save the user object to Active Directory
+
 				newUser.CommitChanges();
 
 				MessageBox.Show("User created successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -342,92 +654,123 @@ namespace UserMaker
 		#endregion
 
 
-		#region Methods for various text boxes
-		private void textBox3_TextChanged(object sender, EventArgs e)
+		#region MaterialSkin event handlers, NEXT BUTTON IN PANEL 1
+		private void materialExpansionPanel1_ValidationButton_Click(object sender, EventArgs e) //this is the next button in panel 1
 		{
+			#region Checking if the required fields are empty before moving into the next step.
+			if (string.IsNullOrWhiteSpace(inputFNAME.Text))
+			{
+				//highlight the text field
+				fName.ForeColor = Color.OrangeRed;
+				MessageBox.Show("Please fill the highlighted field", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+				MessageBox.Show("inside if");
+
+				return;
+
+
+				// Exit the method to prevent further processing
+			}
+			fName.ForeColor = Color.Black; //to reset the font color to black if it was highlighted previously.
+			materialExpansionPanel1.Collapse = false;
+			
+
+			if (string.IsNullOrWhiteSpace(domainList.Text))
+			{
+				dMain.ForeColor = Color.OrangeRed;
+				MessageBox.Show("Please select a domain from the list", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				materialExpansionPanel1.Collapse = false;
+				materialExpansionPanel2.Collapse = true;
+				return;
+			}
+			dMain.ForeColor = Color.Black;
+
+
+			if (string.IsNullOrWhiteSpace(passwordBox.Text))
+			{
+				passWord.ForeColor = Color.OrangeRed;
+				MessageBox.Show("Please create a unique password from the the password generater or create your unique own", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				materialExpansionPanel1.Collapse = false;
+				return;
+			}
+			passWord.ForeColor = Color.Black;
+
+
+			if (string.IsNullOrWhiteSpace(disclaimerSuffix.Text))
+			{
+				discSuffix.ForeColor = Color.OrangeRed;
+				MessageBox.Show("Please select a Disclaimer Suffix for the user", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				materialExpansionPanel1.Collapse = false;
+				return;
+			}
+			discSuffix.ForeColor = Color.Black;
+
+
+			#endregion
+
+
+
+			materialExpansionPanel2.Location = new Point(11, 64);
+			materialExpansionPanel2.Size = new Size(895, 689);
+			materialExpansionPanel1.Collapse = true;
+			materialExpansionPanel2.Collapse = false;
+
+			btnAdminLogin.Location = new Point(33, 476);
+			btnCreateUser.Location = new Point(542, 476);
+			btnClearForm.Location = new Point(767, 420);
+			
+
 
 
 		}
-
-		private void inputFNAME_TextChanged(object sender, EventArgs e)
+		private void materialExpansionPanel2_SaveClick(object sender, EventArgs e) //this is 
 		{
 
-
 		}
-
-		private void listBox1_SelectedIndexChanged_1(object sender, EventArgs e)
+		private void materialExpansionPanel2_Click(object sender, EventArgs e)
 		{
 
 		}
 
-		private void payrollID_TextChanged(object sender, EventArgs e)
-		{
+		//click event on the first panel.
+		//the following will expand or collapse the two panels in the form resepectively. 
+		//If one form is expanded, the other form will collapse and relocate and resize to an appropriate dimensions.
 
-
-		}
-
-		private void textBox5_TextChanged(object sender, EventArgs e)
-		{
-
-		}
-
-		private void textBox7_TextChanged(object sender, EventArgs e)
-		{
-
-		}
-		private void cCode_SelectedIndexChanged(object sender, EventArgs e)
-		{
-
-		}
-
-		private void cCenter_SelectedIndexChanged(object sender, EventArgs e)
-		{
-
-		}
 		#endregion
 
 
 		#region CODE FOR 'CLEAR' BUTTON
+
+
 		private void btnClearForm_Click(object sender, EventArgs e)
 		{
-			foreach (Control control in Controls)
-			{
-				if (control is System.Windows.Forms.TextBox)
-				{
-					System.Windows.Forms.TextBox textBox = (System.Windows.Forms.TextBox)control;
-					textBox.Clear();
-				}
-				else if (control is System.Windows.Forms.ComboBox)
-				{
-					System.Windows.Forms.ComboBox comboBox = (System.Windows.Forms.ComboBox)control;
-					comboBox.SelectedIndex = -1; // Clears selection
 
-					comboBox.Text = "";  //to clear the text as well
-				}
-				//the 'clear' button will uncheck the check box for the Auto Password Generater checkbox
-				else if (control is System.Windows.Forms.CheckBox)
-				{
-					System.Windows.Forms.CheckBox comboBox = (System.Windows.Forms.CheckBox)control;
-					passwordCheckBox.Checked = false;
-				}
+			ClearFields wipeAll = new ClearFields();
+
+			wipeAll.ClearControls(Controls);
+
+			if (materialExpansionPanel2.Collapse == false)
+			{
+				materialExpansionPanel2.Collapse = false;
 			}
+			else
+			{
+				materialExpansionPanel2.Collapse = true;
+			}
+			materialExpansionPanel1.Collapse = false;
 
 			// clear button will also clear the highlights showing the missing field
-			inputFNAME.BackColor = SystemColors.Window;
-
-			domainList.BackColor = SystemColors.Window;
-
-			passwordBox.BackColor = SystemColors.Window;
-
-			reportManager.BackColor = SystemColors.Window;
-
-			cCode.BackColor = SystemColors.Window;
-
-			disclaimerSuffix.BackColor = SystemColors.Window;
-
-			cCenter.BackColor = SystemColors.Window;
-
+			fName.ForeColor = Color.Black;
+			dMain.ForeColor = Color.Black;
+			passWord.ForeColor = Color.Black;
+			orgUnit.ForeColor = Color.Black;
+			discSuffix.ForeColor = Color.Black;
+			costCenter.ForeColor = Color.Black;
+			reportingManager.ForeColor = Color.Black;
 		}
+
+
+
 		#endregion
 
 
@@ -471,14 +814,11 @@ namespace UserMaker
 				passwordBox.Text = "";
 			}
 		}
+
 		#endregion
 
 
 		#region textbox event handlers
-		private void address_textBox(object sender, EventArgs e)
-		{
-
-		}
 
 		private void copy_btnClick(object sender, EventArgs e)
 		{
@@ -517,44 +857,248 @@ namespace UserMaker
 		{
 
 		}
+		#region some more Event Handlers for various text boxes
+		private void progressBar1_Click(object sender, EventArgs e)
+		{
+
+		}
+		private void ticketID_textbox_TextChanged(object sender, EventArgs e)
+		{
+
+		}
+		private void materialExpansionPanel_Step1(object sender, PaintEventArgs e)
+		{
+
+		}
+
+		private void materialExpansionPanel_Step2(object sender, PaintEventArgs e)
+		{
+
+		}
+
+		private void materialLabel1_Click(object sender, EventArgs e)
+		{
+
+		}
+
+
+		private void textBox3_TextChanged(object sender, EventArgs e)
+		{
+
+
+		}
+
+		private void inputFNAME_TextChanged(object sender, EventArgs e)
+		{
+
+
+		}
+
+		private void listBox1_SelectedIndexChanged_1(object sender, EventArgs e)
+		{
+
+		}
+
+		private void payrollID_TextChanged(object sender, EventArgs e)
+		{
+
+
+		}
+
+		private void textBox5_TextChanged(object sender, EventArgs e)
+		{
+
+		}
+
+		private void textBox7_TextChanged(object sender, EventArgs e)
+		{
+
+		}
+		private void cCode_SelectedIndexChanged(object sender, EventArgs e)
+		{
+
+		}
+
+		private void cCenter_SelectedIndexChanged(object sender, EventArgs e)
+		{
+
+		}
 		#endregion
 
-		private void label1_Click(object sender, EventArgs e)
-		{
+		#endregion
 
-		}
 
-		private void label3_Click(object sender, EventArgs e)
-		{
+		#region Button click event for organisational units.
 
-		}
-		private void organisationalUnit_comboBox(object sender, EventArgs e)
-		{
 
-		}
-		#region DIRECTLY SEARCH FOR THE ORGANISATIONAL UNITS FROM THE DIRECTORY. 
-		private void ouList_Click(object sender, EventArgs e)
+		private void ou_BtnClick(object sender, EventArgs e)
 		{
+			#region DIRECTLY SEARCH FOR THE ORGANISATIONAL UNITS FROM THE DIRECTORY
 			// Instantiate the class to retrieve organizational units
-			For_Organisational_unit ouFetcher = new For_Organisational_unit();
+			For_Organisational_unit extractOU = new For_Organisational_unit();
 
 			// Retrieve the organizational units
-			string[] organizationalUnits = ouFetcher.Load_OU();
+			string[] organizationalUnits = extractOU.Load_OU();
 
 			// Populate the ComboBox with the retrieved organizational units
 			if (organizationalUnits != null)
 			{
+
 				OUBox.Items.AddRange(organizationalUnits);
 				//MessageBox.Show(organizationalUnits);
 			}
 			else
 			{
-				MessageBox.Show("Failed to retrieve organizational units.");
+				MessageBox.Show("Failed to retrieve organizational units data.");
+			}
+			#endregion
+
+		}
+
+		#endregion
+
+
+		#region some code to collapse and expand the materaialSKIN expansion panels.
+		private void materialExpansionPanel1_panelClick(object sender, EventArgs e)
+		{
+			if (materialExpansionPanel1.Collapse == false)
+			{
+				materialExpansionPanel2.Location = new Point(14, 351);
+				materialExpansionPanel2.Size = new Size(892, 403);
+
+				materialExpansionPanel2.Collapse = true;
+				btnAdminLogin.Location = new Point(11, 415);
+				btnCreateUser.Location = new Point(547, 421);
+				btnClearForm.Location = new Point(767, 420);
+			}
+			else
+			{
+				//when panel2 is expanded, we move the location of three buttons so that it is not overshadowed by it (expansionpanel)
+				materialExpansionPanel2.Location = new Point(11, 64);
+				materialExpansionPanel2.Size = new Size(892, 338);
+
+				materialExpansionPanel2.Collapse = false;
+
+				btnAdminLogin.Location = new Point(33, 476);
+				btnCreateUser.Location = new Point(542, 476);
+				btnClearForm.Location = new Point(753, 476);
+			}
+		}
+
+		private void materialExpansionPanel2_panelClick(object sender, EventArgs e)
+		{
+			if (materialExpansionPanel1.Collapse == false)
+			{
+				materialExpansionPanel2.Location = new Point(11, 64);
+				materialExpansionPanel2.Size = new Size(895, 689);
+
+				materialExpansionPanel1.Collapse = true;
+				materialExpansionPanel2.Collapse = false;
+
+				btnAdminLogin.Location = new Point(33, 476);
+				btnCreateUser.Location = new Point(542, 476);
+				btnClearForm.Location = new Point(753, 476);
+			}
+			else if (materialExpansionPanel1.Collapse == true)
+			{
+				materialExpansionPanel2.Location = new Point(11, 64);
+				materialExpansionPanel2.Size = new Size(892, 338);
+
+				materialExpansionPanel2.Collapse = false;
+
+				btnAdminLogin.Location = new Point(33, 476);
+				btnCreateUser.Location = new Point(542, 476);
+				btnClearForm.Location = new Point(753, 476);
 			}
 		}
 		#endregion
+
+
+
+
+		private void label6_Click(object sender, EventArgs e)
+		{
+
+		}
+
+		//authenticate and search for a ticket
+		private static async Task<string> AuthenticateAsync(string username, string password, string clientID)
+		{
+			using (var client = new HttpClient { BaseAddress = new Uri(apiBaseUrl) })
+			{
+				var content = new FormUrlEncodedContent(new[]
+				{
+					new KeyValuePair<string, string>("grant_type", "password"),
+					new KeyValuePair<string, string>("client_id", clientID),
+					new KeyValuePair<string, string>("username", username),
+					new KeyValuePair<string, string>("password", password),
+					new KeyValuePair<string, string>("scope", "all")
+				});
+
+				var response = await client.PostAsync("/auth/token", content);
+
+				if (response.IsSuccessStatusCode)
+				{
+					var jsonResponse = await response.Content.ReadAsStringAsync();
+					var authResult = JsonConvert.DeserializeObject<AuthenticationRoot>(jsonResponse);
+					return authResult.access_token;
+				}
+				else
+				{
+					MessageBox.Show($"Authentication failed with status code: {response.StatusCode}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					return null;
+				}
+			}
+		}
+		private static async Task<Request> GetTicketAsync(string ticketID, string accessToken)
+		{
+			using (var client = new HttpClient { BaseAddress = new Uri(apiBaseUrl) })
+			{
+				client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+				var response = await client.GetAsync($"/api/tickets/{ticketID}");
+
+				if (response.IsSuccessStatusCode)
+				{
+					var jsonResponse = await response.Content.ReadAsStringAsync();
+					return JsonConvert.DeserializeObject<Request>(jsonResponse);
+				}
+				else
+				{
+					MessageBox.Show($"Failed to retrieve ticket with status code: {response.StatusCode}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					return null;
+				}
+			}
+		}
+
+
+		
+
+		
+	}
+	#region classes for ticket information retireval from the Halo API
+	public class AuthenticationRoot
+	{
+		public string access_token { get; set; }
 	}
 
+	public class Customfield
+	{
+		public int id { get; set; }
+		public string name { get; set; }
+		public string label { get; set; }
+		public object value { get; set; }
+		public string display { get; set; }
+	}
+
+	public class Request
+	{
+		public string id { get; set; }
+		public string summary { get; set; }
+		public List<Customfield> customfields { get; set; }
+	}
+	#endregion
+
+
 }
-	
+
 
