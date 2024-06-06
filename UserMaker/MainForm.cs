@@ -422,11 +422,19 @@ namespace UserMaker
 							}
 							
 						}
-						
-						#endregion
-						
-						if (field.name == "CFEmployeeAddress")
 
+						#endregion
+						#region To use company name for the searching the domain 
+						if (field.name=="CFEmployeeCompany")
+						{
+							
+							string CompanyName = field.display;
+							ticketInfo += $"{field.name}: {field.display}";
+							domainList.Text = CompanyName;
+							
+						}
+						#endregion
+						if (field.name == "CFEmployeeAddress")
 						{
 							ticketInfo += $"{field.name}: {field.display}\n";
 							isNewUserRequest = true;
@@ -609,6 +617,8 @@ namespace UserMaker
 					newUser.Properties["postalCode"].Value = zipBox.Text;
 				}
 
+
+				newUser.Properties["company"].Value = CompanyName;
 				newUser.Properties["ou"].Value = OUBox.Text;
 				newUser.Properties["title"].Value = jTitle.Text;
 
@@ -651,6 +661,7 @@ namespace UserMaker
 				MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 			}
 			#endregion
+
 		}
 		#endregion
 
