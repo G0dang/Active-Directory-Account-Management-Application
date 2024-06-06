@@ -59,6 +59,8 @@ namespace UserMaker
 			verify.Click -= verifyUser_btnClick;
 			verify.Click += verifyUser_btnClick;
 
+			ticketID_textbox.KeyDown += new KeyEventHandler(ticketID_textbox_KeyDown);
+
 			//initially the progressbar is hidden
 			progressBar_RM.Visible = false;
 
@@ -891,7 +893,19 @@ namespace UserMaker
 		}
 		private void ticketID_textbox_TextChanged(object sender, EventArgs e)
 		{
+			
+		}
+		private void ticketID_textbox_KeyDown(object sender, KeyEventArgs e)
+		{
+			if (e.KeyCode == Keys.Enter)
+			{
+				// Trigger the search button click event
+				searchTicket_btnClick(this, new EventArgs());
 
+				// Prevent the beep sound on Enter key press
+				e.Handled = true;
+				e.SuppressKeyPress = true;
+			}
 		}
 		private void materialExpansionPanel_Step1(object sender, PaintEventArgs e)
 		{
