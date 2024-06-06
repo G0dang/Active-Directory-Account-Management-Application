@@ -368,7 +368,7 @@ namespace UserMaker
 						}
 						#endregion
 
-						#region Populating textboxes witht the information from the ticket
+						#region Populating textboxes with the information from the ticket
 						//populating text boxes here by grabbing the details from the ticket
 						if (field.name == "CFfirstName")
 						{
@@ -386,6 +386,7 @@ namespace UserMaker
 						if (field.name == "CFEmployeeCountry")
 						{
 							countryBox.Text = field.display.Trim();
+							OUBox.Text = field.display.Trim();
 						}
 						if (field.name == "CFEmployeeState")
 						{
@@ -1021,7 +1022,7 @@ namespace UserMaker
 
 		}
 
-		//authenticate and search for a ticket
+		//Generate token
 		private static async Task<string> AuthenticateAsync(string username, string password, string clientID)
 		{
 			using (var client = new HttpClient { BaseAddress = new Uri(apiBaseUrl) })
@@ -1050,6 +1051,8 @@ namespace UserMaker
 				}
 			}
 		}
+		//search for tickets
+
 		private static async Task<Request> GetTicketAsync(string ticketID, string accessToken)
 		{
 			using (var client = new HttpClient { BaseAddress = new Uri(apiBaseUrl) })
