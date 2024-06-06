@@ -43,6 +43,7 @@ namespace UserMaker
 		private static string clientID = "2c45fe93-3daa-40b2-9533-e2fd19df7dc3";
 
 		private DNFinder dnFinder;
+		private SearchComboBox domainFinder;
 		private string managerDistinguishedName;
 		public adminLogin()
 		{
@@ -59,6 +60,8 @@ namespace UserMaker
 			btnClearForm.Click += btnClearForm_Click;
 
 			dnFinder = new DNFinder();
+
+			domainFinder = new SearchComboBox();
 
 		}
 
@@ -420,7 +423,6 @@ namespace UserMaker
 								// Handle the case where the manager was not found
 								MessageBox.Show("Manager not found. Select manager name from the list manually", "Note", MessageBoxButtons.OK, MessageBoxIcon.Error);
 							}
-							
 						}
 
 						#endregion
@@ -431,7 +433,11 @@ namespace UserMaker
 							string CompanyName = field.display;
 							ticketInfo += $"{field.name}: {field.display}";
 							domainList.Text = CompanyName;
-							
+
+							CompanyName = CompanyName.Replace(" ", "");
+							domainFinder.SelectComboBoxItemContains(domainList,CompanyName);
+
+
 						}
 						#endregion
 						if (field.name == "CFEmployeeAddress")
