@@ -34,7 +34,10 @@ namespace UserMaker
 	{
 		//establich connection to the Active Directory Folder in the domain
 		private const string OUDN = "OU=Aayush Test,OU=Accounts,DC=internal,DC=detmold,DC=com,DC=au";
-		
+
+		//For future purpose
+		//OUDN = $"OU={CountryProperty},OU=Users,OU=Accounts,DC=internal,DC=detmold,DC=com,DC=au";
+
 		//this declarations are all the credentials needed for the detmold uat api authentication
 		private static readonly string apiBaseUrl = "https://detmoldgroupuat.haloitsm.com";
 		
@@ -45,6 +48,8 @@ namespace UserMaker
 		private DNFinder dnFinder;
 		private SearchComboBox domainFinder;
 		private string managerDistinguishedName;
+		private string CompanyName;
+
 		public adminLogin()
 		{
 			InitializeComponent();
@@ -431,12 +436,12 @@ namespace UserMaker
 						if (field.name=="CFEmployeeCompany")
 						{
 							
-							string CompanyName = field.display;
-							ticketInfo += $"{field.name}: {field.display}";
-							domainList.Text = CompanyName;
+							CompanyName = field.display;
+							ticketInfo += $"{field.name}: {field.display}\n";
+							string compName = CompanyName;
 
-							CompanyName = CompanyName.Replace(" ", "");
-							domainFinder.SelectComboBoxItemContains(domainList,CompanyName);
+							compName = compName.Replace(" ", "");
+							domainFinder.SelectComboBoxItemContains(domainList,compName);
 						}
 						#endregion
 
@@ -641,7 +646,7 @@ namespace UserMaker
 					#region [REGIONAL MANAGER ATTRIBUTE] Previously selected regional manager from the list and updated the attribute 
 					//but now this may not be need as we have loaded the manager name from the ticket and have created generated the DN name.
 					//We have retrieved the DN of the manager from the reginal manager class.
-					//update 1: regional manager will be supplied through the regional manager list selstion if the ticket returns empty manager name
+					//update 1: regional manager will be supplied through the regional manager list selection if the ticket returns empty manager name
 
 					if (RMBox.SelectedItem != null)
 					{
@@ -1044,6 +1049,7 @@ namespace UserMaker
 		}
 
 		//Generate token
+		#region Generate Token
 		private static async Task<string> AuthenticateAsync(string username, string password, string clientID)
 		{
 			using (var client = new HttpClient { BaseAddress = new Uri(apiBaseUrl) })
@@ -1072,8 +1078,11 @@ namespace UserMaker
 				}
 			}
 		}
+		#endregion
+
 		//search for tickets
 
+		#region search for the ticket provided and return data
 		private static async Task<Request> GetTicketAsync(string ticketID, string accessToken)
 		{
 			using (var client = new HttpClient { BaseAddress = new Uri(apiBaseUrl) })
@@ -1093,12 +1102,9 @@ namespace UserMaker
 				}
 			}
 		}
-
-
-		
-
-		
+		#endregion
 	}
+
 	#region classes for ticket information retireval from the Halo API
 	public class AuthenticationRoot
 	{
