@@ -24,6 +24,7 @@ using System.Net.Http.Headers;
 using System.Globalization;
 using System.Threading.Tasks;
 using System.Net.Security;
+using UserMaker.Forms;
 
 
 //practice for Azure dev ops
@@ -40,7 +41,7 @@ namespace UserMaker
 
 		//this declarations are all the credentials needed for the detmold uat api authentication
 		private static readonly string apiBaseUrl = "https://detmoldgroupuat.haloitsm.com";
-		
+
 		private static string username = "Aayush Gurung";
 		private static string password = "DetmoldGroupUAT2024!";
 		private static string clientID = "2c45fe93-3daa-40b2-9533-e2fd19df7dc3";
@@ -111,7 +112,7 @@ namespace UserMaker
 			{
 				// Hide the progress bar when loading is complete
 				progressBar_RM.Visible = false;
-				
+
 
 			}
 			#endregion
@@ -127,10 +128,10 @@ namespace UserMaker
 				UserInformation selectedUser = (UserInformation)RMBox.SelectedItem;
 				string displayName = selectedUser.DisplayName;
 				string distinguishedName = selectedUser.DistinguishedName;
-				
-				
+
 			}
 		}
+
 		#endregion
 
 
@@ -304,8 +305,8 @@ namespace UserMaker
 			if (accessToken != null)
 			{
 				var ticket = await GetTicketAsync(ticketID, accessToken);
-				
-				
+
+
 				if (ticket != null)
 				{
 					string ticketInfo = $"Ticket ID: {ticket.id}\nTicket Summary: {ticket.summary}\nDetails:\n";
@@ -347,7 +348,7 @@ namespace UserMaker
 										address = address.Replace(city, "").Replace(postcode, "").Trim();
 									}
 								}
-													
+
 							}
 							else
 							{
@@ -435,15 +436,15 @@ namespace UserMaker
 						#endregion
 
 						#region To use company name for the searching the domain 
-						if (field.name=="CFEmployeeCompany")
+						if (field.name == "CFEmployeeCompany")
 						{
-							
+
 							CompanyName = field.display;
 							ticketInfo += $"{field.name}: {field.display}\n";
 							string compName = CompanyName;
 
 							compName = compName.Replace(" ", "");
-							domainFinder.SelectComboBoxItemContains(domainList,compName);
+							domainFinder.SelectComboBoxItemContains(domainList, compName);
 						}
 						#endregion
 
@@ -657,13 +658,13 @@ namespace UserMaker
 						newUser.Properties["manager"].Value = distinguishedNameOfManager;
 					}
 					#endregion
-}
+				}
 				//calling CountryCode Class in here. 
 
 				UserMaker.Class.CountryCode countryCodeUpdater = new UserMaker.Class.CountryCode();
 				countryCodeUpdater.UpdateCountryCodeInActiveDirectory(countryBox, newUser);
 
-				
+
 
 
 				// Save the user object to Active Directory
@@ -702,7 +703,7 @@ namespace UserMaker
 			}
 			fName.ForeColor = Color.Black; //to reset the font color to black if it was highlighted previously.
 			materialExpansionPanel1.Collapse = false;
-			
+
 
 			if (string.IsNullOrWhiteSpace(domainList.Text))
 			{
@@ -747,7 +748,7 @@ namespace UserMaker
 			btnAdminLogin.Location = new Point(33, 476);
 			btnCreateUser.Location = new Point(542, 476);
 			btnClearForm.Location = new Point(767, 420);
-			
+
 
 
 
@@ -893,7 +894,7 @@ namespace UserMaker
 		}
 		private void ticketID_textbox_TextChanged(object sender, EventArgs e)
 		{
-			
+
 		}
 		private void ticketID_textbox_KeyDown(object sender, KeyEventArgs e)
 		{
@@ -1117,6 +1118,12 @@ namespace UserMaker
 			}
 		}
 		#endregion
+
+		private void btnAdminLogin_Click(object sender, EventArgs e)
+		{
+			adminForm adminLoginForm = new adminForm();
+			adminLoginForm.Show();
+		}
 	}
 
 	#region classes for ticket information retireval from the Halo API
