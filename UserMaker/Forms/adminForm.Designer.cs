@@ -50,6 +50,7 @@
 			adminPassword.BorderStyle = BorderStyle.FixedSingle;
 			adminPassword.Location = new Point(125, 82);
 			adminPassword.Name = "adminPassword";
+			adminPassword.PasswordChar = '*';
 			adminPassword.Size = new Size(121, 23);
 			adminPassword.TabIndex = 1;
 			// 
@@ -76,7 +77,7 @@
 			// btnAdminLogin
 			// 
 			btnAdminLogin.FlatStyle = FlatStyle.System;
-			btnAdminLogin.Location = new Point(34, 141);
+			btnAdminLogin.Location = new Point(34, 124);
 			btnAdminLogin.Name = "btnAdminLogin";
 			btnAdminLogin.Size = new Size(75, 23);
 			btnAdminLogin.TabIndex = 4;
@@ -86,7 +87,7 @@
 			// 
 			// btnAdminCancel
 			// 
-			btnAdminCancel.Location = new Point(171, 141);
+			btnAdminCancel.Location = new Point(171, 124);
 			btnAdminCancel.Name = "btnAdminCancel";
 			btnAdminCancel.Size = new Size(75, 23);
 			btnAdminCancel.TabIndex = 5;
@@ -98,7 +99,7 @@
 			// 
 			AutoScaleDimensions = new SizeF(7F, 15F);
 			AutoScaleMode = AutoScaleMode.Font;
-			ClientSize = new Size(302, 205);
+			ClientSize = new Size(302, 168);
 			Controls.Add(btnAdminCancel);
 			Controls.Add(btnAdminLogin);
 			Controls.Add(label_password);
