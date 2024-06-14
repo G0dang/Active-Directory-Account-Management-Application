@@ -78,6 +78,7 @@ namespace UserMaker
 			stateBox = new TextBox();
 			zipBox = new TextBox();
 			orgUnit = new Label();
+			progressBar = new ProgressBar();
 			materialExpansionPanel1.SuspendLayout();
 			materialExpansionPanel2.SuspendLayout();
 			SuspendLayout();
@@ -702,6 +703,14 @@ namespace UserMaker
 			orgUnit.TabIndex = 8;
 			orgUnit.Text = "Organisation Unit *";
 			// 
+			// progressBar
+			// 
+			progressBar.Location = new Point(53, 533);
+			progressBar.Name = "progressBar";
+			progressBar.Size = new Size(820, 23);
+			progressBar.TabIndex = 54;
+			progressBar.Click += progressBar_Click;
+			// 
 			// adminLogin
 			// 
 			AutoScaleDimensions = new SizeF(7F, 15F);
@@ -709,6 +718,7 @@ namespace UserMaker
 			AutoScroll = true;
 			BackColor = Color.MintCream;
 			ClientSize = new Size(927, 565);
+			Controls.Add(progressBar);
 			Controls.Add(materialExpansionPanel2);
 			Controls.Add(btnCreateUser);
 			Controls.Add(btnClearForm);
@@ -781,5 +791,6 @@ namespace UserMaker
 		private TextBox ticketID_textbox;
 		private Button ticketID_btn;
 		private TextBox tempBox;
+		private ProgressBar progressBar;
 	}
 }

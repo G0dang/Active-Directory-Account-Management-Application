@@ -27,6 +27,8 @@ using System.Net.Security;
 using UserMaker.Forms;
 
 
+
+
 //practice for Azure dev ops
 
 namespace UserMaker
@@ -45,11 +47,14 @@ namespace UserMaker
 		private static string username = "Aayush Gurung";
 		private static string password = "DetmoldGroupUAT2024!";
 		private static string clientID = "2c45fe93-3daa-40b2-9533-e2fd19df7dc3";
+		//in region 7 and 15.
 
 		private DNFinder dnFinder;
 		private SearchComboBox domainFinder;
 		private string managerDistinguishedName;
-		private string CompanyName;
+		private string CompanyName; // used in 7.3
+
+		//for storing values in a textbox
 
 		public adminLogin()
 		{
@@ -62,21 +67,23 @@ namespace UserMaker
 
 			ticketID_textbox.KeyDown += new KeyEventHandler(ticketID_textbox_KeyDown);
 
+
 			//initially the progressbar is hidden
 			progressBar_RM.Visible = false;
 
 			btnClearForm.Click += btnClearForm_Click;
 
-			dnFinder = new DNFinder();
+			dnFinder = new DNFinder();       //used in 7.2
 
-			domainFinder = new SearchComboBox();
+			domainFinder = new SearchComboBox();   //used in 7.3
+
 
 		}
 
-		#region MAIN FORM | METHOD/s HERE LOADs ON RUN
+		#region 1. MAIN FORM | METHOD/s HERE LOADs ON RUN
 		private async void MainForm_Load(object sender, EventArgs e)
 		{
-			#region Calling Load_RM method and set up asynchronous Task for regional manager loading 
+			#region 1.1. Calling Load_RM method and set up asynchronous Task for regional manager loading 
 			//using try catch statement to show the progress bar when loading regional manager
 			try
 			{
@@ -120,7 +127,7 @@ namespace UserMaker
 		#endregion
 
 
-		#region method will load the regional  manager list
+		#region 2. method will load the regional  manager list
 		private void RMBox_SelectedIndexChanged(object sender, EventArgs e)
 		{
 			if (RMBox.SelectedItem != null)
@@ -135,7 +142,7 @@ namespace UserMaker
 		#endregion
 
 
-		#region  load the selected item from the addressCSV
+		#region 3. load the selected item from the addressCSV
 
 		public void UpdateAddressTextBox(string column1, string column2, string column3, string column4, string column5)
 		{
@@ -185,7 +192,7 @@ namespace UserMaker
 		#endregion
 
 
-		#region creating a task for regional manager so that it does not block the UI while loading the data from the database
+		#region 4. creating a task for regional manager so that it does not block the UI while loading the data from the database
 		private async Task<UserInformation[]> LoadRegionalManagersAsync()
 		{
 			For_RegionalManager regionalManagerLoader = new For_RegionalManager();
@@ -194,7 +201,7 @@ namespace UserMaker
 		#endregion
 
 
-		#region VARIOUS Event Handlers
+		#region 5. VARIOUS Event Handlers
 		private void label1_Click(object sender, EventArgs e)
 		{
 
@@ -246,7 +253,7 @@ namespace UserMaker
 		#endregion
 
 
-		#region CODE TO VERIFY IF THE USER IS IN THE DIRECTORY
+		#region 6. CODE TO VERIFY IF THE USER IS IN THE DIRECTORY
 		private void verifyUser_btnClick(object sender, EventArgs e)
 		{
 			// Determine user identity based on first name and last name
@@ -290,7 +297,7 @@ namespace UserMaker
 		#endregion
 
 
-		#region For TICKET SEARCH button click event
+		#region 7. For TICKET SEARCH button click event
 		private async void searchTicket_btnClick(object sender, EventArgs e)
 		{
 			string ticketID = ticketID_textbox.Text;
@@ -379,7 +386,7 @@ namespace UserMaker
 						}
 						#endregion
 
-						#region Populating textboxes with the information from the ticket
+						#region 7.1. Populating textboxes with the information from the ticket
 						//populating text boxes here by grabbing the details from the ticket
 						if (field.name == "CFfirstName")
 						{
@@ -405,7 +412,7 @@ namespace UserMaker
 						}
 						#endregion
 
-						#region searching the DN of the manager name we got from the ticket.
+						#region 7.2. searching the DN of the manager name we got from the ticket.
 
 						if (field.name == "CFEmployeeManager")
 						{
@@ -435,7 +442,7 @@ namespace UserMaker
 
 						#endregion
 
-						#region To use company name for the searching the domain 
+						#region 7.3. To use company name for the searching the domain 
 						if (field.name == "CFEmployeeCompany")
 						{
 
@@ -467,7 +474,7 @@ namespace UserMaker
 		#endregion
 
 
-		#region CODE FOR THE 'CREATE USER' BUTTON
+		#region 8. CODE FOR THE 'CREATE USER' BUTTON
 		private void btnCreateUser_Click(object sender, EventArgs e)
 		{
 
@@ -547,7 +554,7 @@ namespace UserMaker
 			userAddress.ForeColor = Color.Black;
 			#endregion
 
-			#region creating UPN,sAMAccount Name, directory path and so on....
+			#region 8.1. creating UPN,sAMAccount Name, directory path and so on....
 			string UPN, Pre2000;
 			if (string.IsNullOrEmpty(inputLNAME.Text))
 			{
@@ -582,7 +589,7 @@ namespace UserMaker
 			}
 			#endregion
 
-			#region update the users attribute values in the active directory
+			#region 8.2. update the users attribute values in the active directory
 			try
 			{
 				// Create a DirectoryEntry object for the OU
@@ -646,7 +653,7 @@ namespace UserMaker
 				}
 				else
 				{
-					#region [REGIONAL MANAGER ATTRIBUTE] Previously selected regional manager from the list and updated the attribute 
+					#region 8.2.1. [REGIONAL MANAGER ATTRIBUTE] Previously selected regional manager from the list and updated the attribute 
 					//but now this may not be need as we have loaded the manager name from the ticket and have created generated the DN name.
 					//We have retrieved the DN of the manager from the reginal manager class.
 					//update 1: regional manager will be supplied through the regional manager list selection if the ticket returns empty manager name
@@ -684,10 +691,10 @@ namespace UserMaker
 		#endregion
 
 
-		#region MaterialSkin event handlers, NEXT BUTTON IN PANEL 1
+		#region 9. MaterialSkin event handlers, NEXT BUTTON IN PANEL 1
 		private void materialExpansionPanel1_ValidationButton_Click(object sender, EventArgs e) //this is the next button in panel 1
 		{
-			#region Checking if the required fields are empty before moving into the next step.
+			#region 9.1. Checking if the required fields are empty before moving into the next step.
 			if (string.IsNullOrWhiteSpace(inputFNAME.Text))
 			{
 				//highlight the text field
@@ -769,7 +776,7 @@ namespace UserMaker
 		#endregion
 
 
-		#region CODE FOR 'CLEAR' BUTTON
+		#region 10. CODE FOR 'CLEAR' BUTTON
 
 
 		private void btnClearForm_Click(object sender, EventArgs e)
@@ -804,7 +811,7 @@ namespace UserMaker
 		#endregion
 
 
-		#region Generating unique passsword and code for the checkbox
+		#region 11. Generating unique passsword and code for the checkbox
 		private void checkBox1_CheckedChanged(object sender, EventArgs e)
 		{
 			//clear passwordtextbox when the check box is unchecked
@@ -848,7 +855,7 @@ namespace UserMaker
 		#endregion
 
 
-		#region textbox event handlers
+		#region 12. textbox event handlers
 
 		private void copy_btnClick(object sender, EventArgs e)
 		{
@@ -970,12 +977,12 @@ namespace UserMaker
 		#endregion
 
 
-		#region Button click event for organisational units.
+		#region 13. Button click event for organisational units.
 
 
 		private void ou_BtnClick(object sender, EventArgs e)
 		{
-			#region DIRECTLY SEARCH FOR THE ORGANISATIONAL UNITS FROM THE DIRECTORY
+			#region 13.1. DIRECTLY SEARCH FOR THE ORGANISATIONAL UNITS FROM THE DIRECTORY
 			// Instantiate the class to retrieve organizational units
 			For_Organisational_unit extractOU = new For_Organisational_unit();
 
@@ -1000,7 +1007,7 @@ namespace UserMaker
 		#endregion
 
 
-		#region some code to collapse and expand the materaialSKIN expansion panels.
+		#region 14. some code to collapse and expand the materaialSKIN expansion panels.
 		private void materialExpansionPanel1_panelClick(object sender, EventArgs e)
 		{
 			if (materialExpansionPanel1.Collapse == false)
@@ -1053,18 +1060,15 @@ namespace UserMaker
 				btnClearForm.Location = new Point(753, 476);
 			}
 		}
-		#endregion
-
-
-
-
 		private void label6_Click(object sender, EventArgs e)
 		{
 
 		}
+		#endregion
+
 
 		//Generate token
-		#region Generate Token
+		#region 15. Generate Token
 		private static async Task<string> AuthenticateAsync(string username, string password, string clientID)
 		{
 			using (var client = new HttpClient { BaseAddress = new Uri(apiBaseUrl) })
@@ -1097,7 +1101,7 @@ namespace UserMaker
 
 		//search for tickets
 
-		#region search for the ticket provided and return data
+		#region 16. search for the ticket provided and return data
 		private static async Task<Request> GetTicketAsync(string ticketID, string accessToken)
 		{
 			using (var client = new HttpClient { BaseAddress = new Uri(apiBaseUrl) })
@@ -1119,11 +1123,27 @@ namespace UserMaker
 		}
 		#endregion
 
+		#region 17. [AdminLogin btn click event] Passing values from the textboxes in the mainform to the admin form.
 		private void btnAdminLogin_Click(object sender, EventArgs e)
 		{
-			adminForm adminLoginForm = new adminForm();
+			string firstName = inputFNAME.Text;
+			string lastName = inputLNAME.Text;
+			string domain = domainList.Text;
+			string orgUnit = OUBox.Text;
+			string newPassword = passwordBox.Text;
+			//string password = passwordBox.Text;
+
+			adminForm adminLoginForm = new adminForm(newPassword, firstName, lastName, domain, orgUnit);
 			adminLoginForm.Show();
 		}
+		#endregion
+
+		private void progressBar_Click(object sender, EventArgs e)
+		{
+
+		}
+
+		
 	}
 
 	#region classes for ticket information retireval from the Halo API
@@ -1149,7 +1169,7 @@ namespace UserMaker
 	}
 	#endregion
 
-
+	
 }
 
 
