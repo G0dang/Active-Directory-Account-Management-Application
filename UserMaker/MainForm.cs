@@ -33,7 +33,7 @@ using UserMaker.Forms;
 
 namespace UserMaker
 {
-	public partial class adminLogin : Form
+	public partial class detmoldApp : Form
 	{
 		//establich connection to the Active Directory Folder in the domain
 		private const string OUDN = "OU=Aayush Test,OU=Accounts,DC=internal,DC=detmold,DC=com,DC=au";
@@ -54,9 +54,8 @@ namespace UserMaker
 		private string managerDistinguishedName;
 		private string CompanyName; // used in 7.3
 
-		//for storing values in a textbox
 
-		public adminLogin()
+		public detmoldApp()
 		{
 			InitializeComponent();
 			passwordCheckBox.CheckedChanged += checkBox1_CheckedChanged;
@@ -98,6 +97,7 @@ namespace UserMaker
 				if (users != null && users.Length > 0)
 				{
 					//sort the list in an alphabetical order
+
 					//using LINQ method to order it alphabetically before binding it to the RMBox.
 					users = users.OrderBy(u => u.DisplayName).ToArray();
 
@@ -192,7 +192,7 @@ namespace UserMaker
 		#endregion
 
 
-		#region 4. creating a task for regional manager so that it does not block the UI while loading the data from the database
+		#region 4. creating a asynchronous task for regional manager so that it does not block the UI while loading the data from the database
 		private async Task<UserInformation[]> LoadRegionalManagersAsync()
 		{
 			For_RegionalManager regionalManagerLoader = new For_RegionalManager();
@@ -282,7 +282,7 @@ namespace UserMaker
 					return;
 				}
 
-				// Set the filter to search for user with the provided pre-Windows 2000 account name
+				// Set the filter to search for user with the provided samaccount name
 				searcher.Filter = "(sAMAccountName=" + Pre2000 + ")";
 				result = searcher.FindOne();
 				if (result != null)
@@ -1090,6 +1090,7 @@ namespace UserMaker
 					var authResult = JsonConvert.DeserializeObject<AuthenticationRoot>(jsonResponse);
 					return authResult.access_token;
 				}
+
 				else
 				{
 					MessageBox.Show($"Authentication failed with status code: {response.StatusCode}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -1123,18 +1124,26 @@ namespace UserMaker
 		}
 		#endregion
 
-		#region 17. [AdminLogin btn click event] Passing values from the textboxes in the mainform to the admin form.
+		#region 17. [AdminLogin btn click event] Passing values from the textboxes in the mainform to the admin form. adminForm requires values from mainform textfields.
 		private void btnAdminLogin_Click(object sender, EventArgs e)
 		{
 			string firstName = inputFNAME.Text;
 			string lastName = inputLNAME.Text;
 			string domain = domainList.Text;
-			string orgUnit = OUBox.Text;
-			string newPassword = passwordBox.Text;
+
 			//string password = passwordBox.Text;
 
-			adminForm adminLoginForm = new adminForm(newPassword, firstName, lastName, domain, orgUnit);
-			adminLoginForm.Show();
+			adminForm existingAdminForm = Application.OpenForms.OfType<adminForm>().FirstOrDefault(); //check if the adminForm is already open.
+
+			if (existingAdminForm != null)
+			{
+				existingAdminForm.BringToFront(); // Bring the existing form to the front
+			}
+			else
+			{
+				adminForm adminLoginForm = new adminForm(firstName, lastName, domain, progressBar_Mail);
+				adminLoginForm.Show();
+			}
 		}
 		#endregion
 
@@ -1143,7 +1152,10 @@ namespace UserMaker
 
 		}
 
-		
+		private void ProgressbarLabel(object sender, EventArgs e)
+		{
+
+		}
 	}
 
 	#region classes for ticket information retireval from the Halo API
