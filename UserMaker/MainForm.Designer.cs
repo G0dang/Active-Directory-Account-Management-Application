@@ -2,7 +2,7 @@
 
 namespace UserMaker
 {
-	partial class adminLogin
+	partial class detmoldApp
 	{
 		/// <summary>
 		///  Required designer variable.
@@ -30,7 +30,7 @@ namespace UserMaker
 		/// </summary>
 		private void InitializeComponent()
 		{
-			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(adminLogin));
+			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(detmoldApp));
 			lName = new Label();
 			inputLNAME = new TextBox();
 			dMain = new Label();
@@ -78,7 +78,8 @@ namespace UserMaker
 			stateBox = new TextBox();
 			zipBox = new TextBox();
 			orgUnit = new Label();
-			progressBar = new ProgressBar();
+			progressBar_Mail = new ProgressBar();
+			progressbarLabel = new MaterialSkin.Controls.MaterialLabel();
 			materialExpansionPanel1.SuspendLayout();
 			materialExpansionPanel2.SuspendLayout();
 			SuspendLayout();
@@ -253,7 +254,7 @@ namespace UserMaker
 			btnAdminLogin.Name = "btnAdminLogin";
 			btnAdminLogin.Size = new Size(126, 39);
 			btnAdminLogin.TabIndex = 20;
-			btnAdminLogin.Text = "Admin Login";
+			btnAdminLogin.Text = "Create mail";
 			btnAdminLogin.UseVisualStyleBackColor = false;
 			btnAdminLogin.Click += btnAdminLogin_Click;
 			// 
@@ -703,22 +704,41 @@ namespace UserMaker
 			orgUnit.TabIndex = 8;
 			orgUnit.Text = "Organisation Unit *";
 			// 
-			// progressBar
+			// progressBar_Mail
 			// 
-			progressBar.Location = new Point(53, 533);
-			progressBar.Name = "progressBar";
-			progressBar.Size = new Size(820, 23);
-			progressBar.TabIndex = 54;
-			progressBar.Click += progressBar_Click;
+			progressBar_Mail.BackColor = Color.White;
+			progressBar_Mail.Location = new Point(52, 523);
+			progressBar_Mail.Name = "progressBar_Mail";
+			progressBar_Mail.Size = new Size(820, 23);
+			progressBar_Mail.Style = ProgressBarStyle.Continuous;
+			progressBar_Mail.TabIndex = 54;
+			progressBar_Mail.Visible = false;
+			progressBar_Mail.Click += progressBar_Click;
 			// 
-			// adminLogin
+			// progressbarLabel
+			// 
+			progressbarLabel.AutoSize = true;
+			progressbarLabel.BackColor = Color.Transparent;
+			progressbarLabel.Depth = 0;
+			progressbarLabel.Font = new Font("Roboto", 14F, FontStyle.Regular, GraphicsUnit.Pixel);
+			progressbarLabel.Location = new Point(419, 525);
+			progressbarLabel.MouseState = MaterialSkin.MouseState.HOVER;
+			progressbarLabel.Name = "progressbarLabel";
+			progressbarLabel.Size = new Size(63, 19);
+			progressbarLabel.TabIndex = 55;
+			progressbarLabel.Text = "Progress";
+			progressbarLabel.Visible = false;
+			progressbarLabel.Click += ProgressbarLabel;
+			// 
+			// detmoldApp
 			// 
 			AutoScaleDimensions = new SizeF(7F, 15F);
 			AutoScaleMode = AutoScaleMode.Font;
 			AutoScroll = true;
 			BackColor = Color.MintCream;
 			ClientSize = new Size(927, 565);
-			Controls.Add(progressBar);
+			Controls.Add(progressbarLabel);
+			Controls.Add(progressBar_Mail);
 			Controls.Add(materialExpansionPanel2);
 			Controls.Add(btnCreateUser);
 			Controls.Add(btnClearForm);
@@ -728,7 +748,7 @@ namespace UserMaker
 			Icon = (Icon)resources.GetObject("$this.Icon");
 			Margin = new Padding(3, 2, 3, 2);
 			MaximizeBox = false;
-			Name = "adminLogin";
+			Name = "detmoldApp";
 			Text = "User Creation Tool (Detmold Group)";
 			Load += MainForm_Load;
 			materialExpansionPanel1.ResumeLayout(false);
@@ -736,6 +756,7 @@ namespace UserMaker
 			materialExpansionPanel2.ResumeLayout(false);
 			materialExpansionPanel2.PerformLayout();
 			ResumeLayout(false);
+			PerformLayout();
 		}
 
 		private void textBox1_TextChanged(object sender, EventArgs e)
@@ -791,6 +812,8 @@ namespace UserMaker
 		private TextBox ticketID_textbox;
 		private Button ticketID_btn;
 		private TextBox tempBox;
-		private ProgressBar progressBar;
+		private ProgressBar progressBar_Mail;
+		private MaterialSkin.Controls.MaterialLabel progressbarLabel;
+		private MaterialSkin.Controls.MaterialLabel labelProgress;
 	}
 }
