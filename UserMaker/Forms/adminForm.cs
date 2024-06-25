@@ -15,6 +15,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 using System.Threading.Tasks;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using System.DirectoryServices;
+using System.Threading;
 
 namespace UserMaker.Forms
 {
@@ -30,16 +31,19 @@ namespace UserMaker.Forms
 		private System.Windows.Forms.ProgressBar progressBar;
 		private CancellationTokenSource stopAsync;
 
+		private int countt = 0;
+
+
 		public adminForm(string firstName, string lastName, string domain, System.Windows.Forms.ProgressBar progressBar)
 		{
 			InitializeComponent();
 
-
+			
 			this.firstName = firstName;
 			this.lastName = lastName;
 			this.domain = domain;
 			this.progressBar = progressBar;
-
+		
 			adminPassword.KeyDown += new KeyEventHandler(adminPassword_KeyDown); // used for initiating btn click action after typing password and hitiing 'Enter' key in admin login form.
 			
 		
@@ -48,8 +52,8 @@ namespace UserMaker.Forms
 
 		private async void adminBtnOKClick(object sender, EventArgs e)
 		{
-
-			var stopAsync = new CancellationTokenSource(); // to stop the async process when certain conditions are met
+			
+			 // to stop the async process when certain conditions are met
 			//string[] propertiesToLoad = { "targetAddress" };
 
 			if (string.IsNullOrEmpty(usernameBox.Text))
@@ -84,84 +88,99 @@ namespace UserMaker.Forms
 				samName = firstName + "." + lastName;
 			}
 
+			this.Close();
+
 			using (DirectoryEntry entry = new DirectoryEntry("LDAP://internal.detmold.com.au"))
 			using (DirectorySearcher searcher = new DirectorySearcher(entry))
 			{
-					searcher.Filter = "(targetAddress=" + "SMTP:" + samName + "@detconnect.mail.onmicrosoft.com)";
-					SearchResult routingResult = searcher.FindOne();
-					if (routingResult == null)
+				searcher.Filter = "(targetAddress=" + "SMTP:" + samName + "@detconnect.mail.onmicrosoft.com)";
+				SearchResult routingResult = searcher.FindOne();
+
+				if (routingResult == null)
+				{
+					MessageBox.Show("Mail box not found");
+
+					bool mailboxCreated = false;
+
+
+					while (!mailboxCreated)
 					{
-					MessageBox.Show("MailBox not found. Next step: Creating Mailbox...");
+
 						try
 						{
-							syncTimer = new System.Threading.Timer(async _ =>
-							
-							{
-								if (stopAsync.Token.IsCancellationRequested)
-								{
-									return;
-								}
-								try
-								{
-									await MailBoxConnect.GetMailboxInfo(userName, password, firstName, lastName, domain, stopAsync.Token);
-								}
-								catch ( OperationCanceledException)
-								{
-									MessageBox.Show("Task was cancelled.");
-								}
-								catch (Exception ex)
-								{
-									MessageBox.Show($"Unexpected error: {ex.Message}");
-								}
-								finally
-								{
-									progressBar.Invoke((MethodInvoker)(() => progressBar.Visible = false));
-									
-									if (!stopAsync.IsCancellationRequested)
-									{
-										stopAsync.Cancel();
-									}
-								}
-							}, null, 0, 10000);
+							mailboxCreated= await MailBoxConnect.GetMailboxInfo(userName, password, firstName, lastName, domain);
 
 							progressBar.Visible = true;
+
+
+							if (mailboxCreated)
+							{
+								progressBar.Visible = false;
+
+								MessageBox.Show("Mailbox creation completed or error occured.(ONLY FOR TESTING)");
+							}
+
+							if (!mailboxCreated)
+							{
+								await ShowProgressDuringDelay(10000, progressBar);
+								await Task.Delay(10000);
+							}
 						}
 
 						catch (Exception ex)
-						{ 
-							MessageBox.Show($"Unexpected error: {ex.Message}");
+						{
+							MessageBox.Show($"Try again. Unexpected error: {ex.Message}");
 							progressBar.Visible = false;
+							mailboxCreated = true;	
+
+
 						}
 
 					}
+				}
+				else 
 
-								
-					else
-					{
-						MessageBox.Show($"User: {samName.Replace("."," ")} already has a mailbox");
+				{
+					MessageBox.Show("MailBox already exists.");
+				}
+														
+					
 
-					}
+
+			}
+
+				progressBar.Visible = false;
 
 				
-
-				this.Close();
-			}
 		}
+	
 
-		private void OnFormClosing(object sender, FormClosingEventArgs e)
+		#region For progress bar 
+		private async Task ShowProgressDuringDelay(int delayMilliseconds, System.Windows.Forms.ProgressBar progressBar)
 		{
-			if (syncTimer != null)
+			int delayIncrement = 100; // Update interval in milliseconds
+			int totalSteps = delayMilliseconds / delayIncrement;
+			int currentStep = 0;
+
+			progressBar.Maximum = totalSteps;
+			progressBar.Value = 0;
+
+			for (int i = 0; i < totalSteps; i++)
 			{
-				syncTimer.Dispose();
+				if (stopAsync.Token.IsCancellationRequested)
+				{
+					progressBar.Value = 0;
+					return; // Exit if cancellation is requested
+				}
+
+				await Task.Delay(delayIncrement);
+				currentStep++;
+				progressBar.Value = currentStep;
 			}
-			if (stopAsync != null)
-			{
-				stopAsync.Cancel();
-				stopAsync.Dispose();
-			}
+
+			progressBar.Value = progressBar.Maximum; // Ensure progress bar is full at the end
 		}
-
-
+		#endregion
 		private void adminBtnCancelClick(object sender, EventArgs e)
 		{
 			this.Close();

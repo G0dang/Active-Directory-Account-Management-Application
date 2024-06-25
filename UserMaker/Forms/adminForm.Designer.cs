@@ -35,7 +35,6 @@
 			label_password = new Label();
 			btnAdminLogin = new Button();
 			btnAdminCancel = new Button();
-			progressBar_mail = new MaterialSkin.Controls.MaterialProgressBar();
 			SuspendLayout();
 			// 
 			// usernameBox
@@ -98,22 +97,11 @@
 			btnAdminCancel.UseVisualStyleBackColor = true;
 			btnAdminCancel.Click += adminBtnCancelClick;
 			// 
-			// progressBar_mail
-			// 
-			progressBar_mail.Depth = 0;
-			progressBar_mail.Location = new Point(63, 153);
-			progressBar_mail.MouseState = MaterialSkin.MouseState.HOVER;
-			progressBar_mail.Name = "progressBar_mail";
-			progressBar_mail.Size = new Size(173, 5);
-			progressBar_mail.TabIndex = 6;
-			progressBar_mail.Click += materialProgressBar1_Click;
-			// 
 			// adminForm
 			// 
 			AutoScaleDimensions = new SizeF(7F, 15F);
 			AutoScaleMode = AutoScaleMode.Font;
 			ClientSize = new Size(302, 168);
-			Controls.Add(progressBar_mail);
 			Controls.Add(btnAdminCancel);
 			Controls.Add(btnAdminLogin);
 			Controls.Add(label_password);
@@ -136,6 +124,5 @@
 		private Label label_password;
 		private Button btnAdminLogin;
 		private Button btnAdminCancel;
-		private MaterialSkin.Controls.MaterialProgressBar progressBar_mail;
 	}
 }

@@ -18,73 +18,83 @@ using System.Drawing.Text;
 using System.DirectoryServices;
 using UserMaker.Forms;
 using System.Threading;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace UserMaker
 {
 	public class MailBoxConnect
 	{
 		//private ProgressBar pb = Application.OpenForms["detmoldApp"].Controls["progressBar_Mail"] as ProgressBar;
+
 		
-		
-		
-		public static async Task GetMailboxInfo(string userName, string password, string firstName, string lastName, string domain, CancellationToken cancelAsync)
+
+		public static async Task<bool> GetMailboxInfo(string userName, string password, string firstName, string lastName, string domain)
 		{
-			// Configuration variables
-			string exchangeServer = "sgmail00.internal.detmold.com.au";
-			string strUserPrincipalName, strSamAccountName;
-			// Create a secure password
-
-			SecureString securePassword = new SecureString();
-			foreach (char c in password) //password is user credential password
+			using (DirectoryEntry entry = new DirectoryEntry("LDAP://internal.detmold.com.au"))
+			using (DirectorySearcher searcher = new DirectorySearcher(entry))
 			{
-				securePassword.AppendChar(c);
-			}
+				// Configuration variables
+				string exchangeServer = "sgmail00.internal.detmold.com.au";
+				string strUserPrincipalName, strSamAccountName;
+				// Create a secure password
 
-			// Create credential object
-			PSCredential credential = new PSCredential($"{userName}", securePassword);
-
-			// Create WSMan connection info
-			Uri connectionUri = new Uri($"http://{exchangeServer}/PowerShell/");
-
-			WSManConnectionInfo connectionInfo = new WSManConnectionInfo(connectionUri, "http://schemas.microsoft.com/powershell/Microsoft.Exchange", credential);
-
-
-			connectionInfo.AuthenticationMechanism = AuthenticationMechanism.Kerberos;
-			
-
-			if (string.IsNullOrEmpty(lastName))
-			{
-				strUserPrincipalName = firstName + "@" + domain;
-				strSamAccountName = firstName;
-			}
-
-			else
-			{
-				strUserPrincipalName = firstName + "." + lastName + "@" + domain;
-				strSamAccountName = firstName + "." + lastName;
-			}
-
-			// Create runspace
-			using (Runspace rs = RunspaceFactory.CreateRunspace(connectionInfo))
-			{
-				try
+				SecureString securePassword = new SecureString();
+				foreach (char c in password) //password is user credential password
 				{
-					MessageBox.Show("Connection Established");
+					securePassword.AppendChar(c);
+				}
 
-					await Task.Run(() => rs.Open(), cancelAsync);
+				if (string.IsNullOrEmpty(lastName))
+				{
+					strUserPrincipalName = firstName + "@" + domain;
+					strSamAccountName = firstName;
+				}
 
-					MessageBox.Show("Mailbox creation started");
+				else
+				{
+					strUserPrincipalName = firstName + "." + lastName + "@" + domain;
+					strSamAccountName = firstName + "." + lastName;
+				}
 
-					using (DirectoryEntry entry = new DirectoryEntry("LDAP://internal.detmold.com.au"))
-					using (DirectorySearcher searcher = new DirectorySearcher(entry))
+			
+				// Initialize DirectoryEntry and DirectorySearcher objects
+				searcher.Filter = "(userPrincipalName=" + strUserPrincipalName + ")";
+				SearchResult result = searcher.FindOne();
+
+				if (result != null)
+				{
+					// Create credential object
+					PSCredential credential = new PSCredential($"{userName}", securePassword);
+
+					// Create WSMan connection info
+					Uri connectionUri = new Uri($"http://{exchangeServer}/PowerShell/");
+
+					WSManConnectionInfo connectionInfo = new WSManConnectionInfo(connectionUri, "http://schemas.microsoft.com/powershell/Microsoft.Exchange", credential);
+
+
+					connectionInfo.AuthenticationMechanism = AuthenticationMechanism.Kerberos;
+
+
+					// Create runspace
+					using (Runspace rs = RunspaceFactory.CreateRunspace(connectionInfo))
+
 					{
-						// Initialize DirectoryEntry and DirectorySearcher objects
-						searcher.Filter = "(userPrincipalName=" + strUserPrincipalName + ")";
-						SearchResult result = searcher.FindOne();
+						
 
-						if (result != null)
+						try
+
 						{
+							MessageBox.Show("Connection Established");
+
+
+							await Task.Run(() => rs.Open());
+							
+
+							MessageBox.Show("Mailbox creation started");
+
+
 							MessageBox.Show("User Found");
+
 
 							PowerShell powershell = PowerShell.Create();
 							powershell.Runspace = rs;
@@ -94,15 +104,9 @@ namespace UserMaker
 									  .AddParameter("RemoteRoutingAddress", $"{strSamAccountName}@detconnect.mail.onmicrosoft.com");
 
 
-							var results = await Task.Run(() =>
-							{
-								var invokeResults = powershell.Invoke();
-								if (cancelAsync.IsCancellationRequested)
-								{
-									cancelAsync.ThrowIfCancellationRequested();
-								}
-								return invokeResults;
-							}, cancelAsync);
+							var results = await Task.Run(() => powershell.Invoke());
+
+
 
 							if (powershell.HadErrors)
 							{
@@ -110,70 +114,51 @@ namespace UserMaker
 								{
 									MessageBox.Show($"Error: {errorRecord.ToString()}");
 								}
-								if (!cancelAsync.IsCancellationRequested)
-								{
-									MessageBox.Show("Errors occurred during mailbox creation. Stopping task.");
-									return;
-								}
+								return false;
 							}
 
 							MessageBox.Show($"Mail for the user: {strSamAccountName} created succesfully");
 							
-							if (powershell.HadErrors)
-							{
-								foreach (var errorRecord in results)
-								{
-									MessageBox.Show($"Error: {errorRecord.ToString()}");
-								}
+							return true;
 
-								if (!cancelAsync.IsCancellationRequested) //will stop the asyn task 
-								{
-									MessageBox.Show("Errors occurred during mailbox creation. Stopping task.");
-									return;
-								}
-															
-							}
 
-							if (!cancelAsync.IsCancellationRequested) //will stop the async task when user is found and the mailbox is created.
-							{
-								cancelAsync.ThrowIfCancellationRequested();
-							}
 						}
 
-						else
-
+						catch (OperationCanceledException)
 						{
-							MessageBox.Show($"User: {strSamAccountName.Replace("."," ")} not found. Will try again in 30 seconds...");
+							MessageBox.Show("Operation was canceled.");
+							
+							return false;
+						}
+
+						catch (Exception ex)
+						{
+
+							MessageBox.Show($"IN CATCH Unexpected error: {ex.Message}");
+							
+							return true;
+						}
+
+						finally
+						{
+							rs.Close();
+							rs.Dispose();
 
 						}
 
-						rs.Close();
-						
 					}
 				}
 
-				catch (OperationCanceledException)
-				{
-					MessageBox.Show("Task was cancelled.");
-				}
+				else
 
-				catch (Exception ex)
 				{
+					MessageBox.Show($"User: {strSamAccountName.Replace(".", " ")} not found. Will try again in 30 seconds....(SET TO 10 SECONDS FOR TESTING)");
+					return false;
 
-					MessageBox.Show($"Unexpected error: {ex.Message}");
-					rs.Close();
-				}
-
-				finally
-				{
-					rs.Close();
-					rs.Dispose();
-					
 				}
 
 			}
-				
-			
+
 		}
 	}
 }
