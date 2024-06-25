@@ -86,15 +86,11 @@ namespace UserMaker
 						{
 							MessageBox.Show("Connection Established");
 
-
 							await Task.Run(() => rs.Open());
 							
-
 							MessageBox.Show("Mailbox creation started");
 
-
 							MessageBox.Show("User Found");
-
 
 							PowerShell powershell = PowerShell.Create();
 							powershell.Runspace = rs;
@@ -103,10 +99,7 @@ namespace UserMaker
 									  .AddParameter("Identity", strUserPrincipalName)
 									  .AddParameter("RemoteRoutingAddress", $"{strSamAccountName}@detconnect.mail.onmicrosoft.com");
 
-
 							var results = await Task.Run(() => powershell.Invoke());
-
-
 
 							if (powershell.HadErrors)
 							{
