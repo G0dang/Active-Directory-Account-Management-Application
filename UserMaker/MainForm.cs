@@ -155,15 +155,23 @@ namespace UserMaker
 		}
 		private void addressList_BtnClick(object sender, EventArgs e)
 		{
+			addressCSV existingForm = Application.OpenForms.OfType<addressCSV>().FirstOrDefault();
+			if (existingForm != null)
+			{
+				existingForm.BringToFront();
+			}
+			else
+			{
 
-			// Create an instance of addressCSV form
-			addressCSV addressCSVForm = new addressCSV();
+				// Create an instance of addressCSV form
+				addressCSV addressCSVForm = new addressCSV();
 
-			// Subscribe to the RowSelected event of the addressCSV form
-			addressCSVForm.RowSelected += AddressCSVForm_RowSelected;
+				// Subscribe to the RowSelected event of the addressCSV form
+				addressCSVForm.RowSelected += AddressCSVForm_RowSelected;
 
-			// Show the addressCSV form
-			addressCSVForm.Show();
+				// Show the addressCSV form
+				addressCSVForm.Show();
+			}
 		}
 
 		private void AddressCSVForm_RowSelected(object sender, string rowData)
@@ -1145,6 +1153,7 @@ namespace UserMaker
 				adminLoginForm.Show();
 			}
 		}
+
 		#endregion
 
 		private void progressBar_Click(object sender, EventArgs e)
