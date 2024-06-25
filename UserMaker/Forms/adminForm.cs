@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using System.DirectoryServices;
 using System.Threading;
+using Newtonsoft.Json.Linq;
 
 namespace UserMaker.Forms
 {
@@ -29,11 +30,7 @@ namespace UserMaker.Forms
 		string samName;
 		string upnName;
 		private System.Windows.Forms.ProgressBar progressBar;
-		private CancellationTokenSource stopAsync;
-
-		private int countt = 0;
-
-
+		
 		public adminForm(string firstName, string lastName, string domain, System.Windows.Forms.ProgressBar progressBar)
 		{
 			InitializeComponent();
@@ -48,12 +45,10 @@ namespace UserMaker.Forms
 			
 		
 		}
-
-
+		#region ADMIN LOGIN
 		private async void adminBtnOKClick(object sender, EventArgs e)
 		{
-			
-			 // to stop the async process when certain conditions are met
+						 // to stop the async process when certain conditions are met
 			//string[] propertiesToLoad = { "targetAddress" };
 
 			if (string.IsNullOrEmpty(usernameBox.Text))
@@ -111,11 +106,13 @@ namespace UserMaker.Forms
 							mailboxCreated= await MailBoxConnect.GetMailboxInfo(userName, password, firstName, lastName, domain);
 
 							progressBar.Visible = true;
+							//progressLabel.Visible = true;
 
 
 							if (mailboxCreated)
 							{
 								progressBar.Visible = false;
+								//progressLabel.Visible = false;
 
 								MessageBox.Show("Mailbox creation completed or error occured.(ONLY FOR TESTING)");
 							}
@@ -123,6 +120,7 @@ namespace UserMaker.Forms
 							if (!mailboxCreated)
 							{
 								await ShowProgressDuringDelay(10000, progressBar);
+								
 								await Task.Delay(10000);
 							}
 						}
@@ -130,7 +128,9 @@ namespace UserMaker.Forms
 						catch (Exception ex)
 						{
 							MessageBox.Show($"Try again. Unexpected error: {ex.Message}");
+							
 							progressBar.Visible = false;
+							//progressLabel.Visible= false;
 							mailboxCreated = true;	
 
 
@@ -141,19 +141,16 @@ namespace UserMaker.Forms
 				else 
 
 				{
-					MessageBox.Show("MailBox already exists.");
+					MessageBox.Show("MailBox already exists.?? pls check");
 				}
-														
-					
-
-
+			
 			}
 
 				progressBar.Visible = false;
-
-				
-		}
 	
+		}
+		#endregion
+
 
 		#region For progress bar 
 		private async Task ShowProgressDuringDelay(int delayMilliseconds, System.Windows.Forms.ProgressBar progressBar)
@@ -161,18 +158,14 @@ namespace UserMaker.Forms
 			int delayIncrement = 100; // Update interval in milliseconds
 			int totalSteps = delayMilliseconds / delayIncrement;
 			int currentStep = 0;
-
+			
 			progressBar.Maximum = totalSteps;
 			progressBar.Value = 0;
+			
+			
 
 			for (int i = 0; i < totalSteps; i++)
 			{
-				if (stopAsync.Token.IsCancellationRequested)
-				{
-					progressBar.Value = 0;
-					return; // Exit if cancellation is requested
-				}
-
 				await Task.Delay(delayIncrement);
 				currentStep++;
 				progressBar.Value = currentStep;
@@ -181,6 +174,8 @@ namespace UserMaker.Forms
 			progressBar.Value = progressBar.Maximum; // Ensure progress bar is full at the end
 		}
 		#endregion
+
+		#region Various event handlers
 		private void adminBtnCancelClick(object sender, EventArgs e)
 		{
 			this.Close();
@@ -209,5 +204,6 @@ namespace UserMaker.Forms
 		{
 
 		}
+		#endregion
 	}
 }
