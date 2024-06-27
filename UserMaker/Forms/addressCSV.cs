@@ -58,7 +58,7 @@ namespace UserMaker
 				// Specify the path to your CSV file
 
 				//file path to be changed to a public network
-				string filePath = @"\\aunas01\SCCM\UserCreation\Address.csv";
+				string filePath = @"";
 
 				// Read CSV file into a DataTable
 				DataTable dt = new DataTable();

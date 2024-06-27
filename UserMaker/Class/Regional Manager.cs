@@ -13,7 +13,7 @@ namespace UserMaker.Class
 		public UserInformation[] Load_RM()
 		{
 			List<UserInformation> managers = new List<UserInformation>();
-			string rootOUPath = "LDAP://OU=Users,OU=Accounts,DC=internal,DC=detmold,DC=com,DC=au";
+			string rootOUPath = "LDAP://OU=,OU=,DC=,DC=,DC=,DC=";
 
 			using (DirectoryEntry rootOU = new DirectoryEntry(rootOUPath))
 			using (DirectorySearcher searcher = new DirectorySearcher(rootOU))

@@ -30,11 +30,11 @@ namespace UserMaker
 
 		public static async Task<bool> GetMailboxInfo(string userName, string password, string firstName, string lastName, string domain)
 		{
-			using (DirectoryEntry entry = new DirectoryEntry("LDAP://internal.detmold.com.au"))
+			using (DirectoryEntry entry = new DirectoryEntry("LDAP://com.au"))
 			using (DirectorySearcher searcher = new DirectorySearcher(entry))
 			{
 				// Configuration variables
-				string exchangeServer = "sgmail00.internal.detmold.com.au";
+				string exchangeServer = ""; //exchange server URL.
 				string strUserPrincipalName, strSamAccountName;
 				// Create a secure password
 
@@ -97,7 +97,7 @@ namespace UserMaker
 
 							powershell.AddCommand("Enable-RemoteMailbox")
 									  .AddParameter("Identity", strUserPrincipalName)
-									  .AddParameter("RemoteRoutingAddress", $"{strSamAccountName}@detconnect.mail.onmicrosoft.com");
+									  .AddParameter("RemoteRoutingAddress", $"{strSamAccountName}@some.mail.onmicrosoft.com");
 
 							var results = await Task.Run(() => powershell.Invoke());
 

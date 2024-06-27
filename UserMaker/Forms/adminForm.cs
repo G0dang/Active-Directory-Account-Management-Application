@@ -85,7 +85,7 @@ namespace UserMaker.Forms
 
 			this.Close();
 
-			using (DirectoryEntry entry = new DirectoryEntry("LDAP://internal.detmold.com.au"))
+			using (DirectoryEntry entry = new DirectoryEntry("LDAP://com.au"))
 			using (DirectorySearcher searcher = new DirectorySearcher(entry))
 			{
 				searcher.Filter = "(targetAddress=" + "SMTP:" + samName + "@detconnect.mail.onmicrosoft.com)";
@@ -132,7 +132,6 @@ namespace UserMaker.Forms
 							progressBar.Visible = false;
 							//progressLabel.Visible= false;
 							mailboxCreated = true;	
-
 
 						}
 

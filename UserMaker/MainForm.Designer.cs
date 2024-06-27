@@ -79,7 +79,6 @@ namespace UserMaker
 			zipBox = new TextBox();
 			orgUnit = new Label();
 			progressBar_Mail = new ProgressBar();
-			progressbarLabel = new MaterialSkin.Controls.MaterialLabel();
 			materialExpansionPanel1.SuspendLayout();
 			materialExpansionPanel2.SuspendLayout();
 			SuspendLayout();
@@ -710,25 +709,9 @@ namespace UserMaker
 			progressBar_Mail.Location = new Point(52, 523);
 			progressBar_Mail.Name = "progressBar_Mail";
 			progressBar_Mail.Size = new Size(820, 23);
-			progressBar_Mail.Style = ProgressBarStyle.Continuous;
 			progressBar_Mail.TabIndex = 54;
 			progressBar_Mail.Visible = false;
 			progressBar_Mail.Click += progressBar_Click;
-			// 
-			// progressbarLabel
-			// 
-			progressbarLabel.AutoSize = true;
-			progressbarLabel.BackColor = Color.Transparent;
-			progressbarLabel.Depth = 0;
-			progressbarLabel.Font = new Font("Roboto", 14F, FontStyle.Regular, GraphicsUnit.Pixel);
-			progressbarLabel.Location = new Point(419, 525);
-			progressbarLabel.MouseState = MaterialSkin.MouseState.HOVER;
-			progressbarLabel.Name = "progressbarLabel";
-			progressbarLabel.Size = new Size(63, 19);
-			progressbarLabel.TabIndex = 55;
-			progressbarLabel.Text = "Progress";
-			progressbarLabel.Visible = false;
-			progressbarLabel.Click += ProgressbarLabel;
 			// 
 			// detmoldApp
 			// 
@@ -737,7 +720,6 @@ namespace UserMaker
 			AutoScroll = true;
 			BackColor = Color.MintCream;
 			ClientSize = new Size(927, 565);
-			Controls.Add(progressbarLabel);
 			Controls.Add(progressBar_Mail);
 			Controls.Add(materialExpansionPanel2);
 			Controls.Add(btnCreateUser);
@@ -756,7 +738,6 @@ namespace UserMaker
 			materialExpansionPanel2.ResumeLayout(false);
 			materialExpansionPanel2.PerformLayout();
 			ResumeLayout(false);
-			PerformLayout();
 		}
 
 		private void textBox1_TextChanged(object sender, EventArgs e)
@@ -813,7 +794,6 @@ namespace UserMaker
 		private Button ticketID_btn;
 		private TextBox tempBox;
 		private ProgressBar progressBar_Mail;
-		private MaterialSkin.Controls.MaterialLabel progressbarLabel;
-		private MaterialSkin.Controls.MaterialLabel labelProgress;
+		
 	}
 }

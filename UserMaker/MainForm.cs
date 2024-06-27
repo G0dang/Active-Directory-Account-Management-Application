@@ -36,17 +36,17 @@ namespace UserMaker
 	public partial class detmoldApp : Form
 	{
 		//establich connection to the Active Directory Folder in the domain
-		private const string OUDN = "OU=Aayush Test,OU=Accounts,DC=internal,DC=detmold,DC=com,DC=au";
+		private const string OUDN = "OU=,OU=,DC=,DC=,DC=,DC=";
 
 		//For future purpose
 		//OUDN = $"OU={CountryProperty},OU=Users,OU=Accounts,DC=internal,DC=detmold,DC=com,DC=au";
 
 		//this declarations are all the credentials needed for the detmold uat api authentication
-		private static readonly string apiBaseUrl = "https://detmoldgroupuat.haloitsm.com";
+		private static readonly string apiBaseUrl = " "; //link to the ticketing system
 
-		private static string username = "Aayush Gurung";
-		private static string password = "DetmoldGroupUAT2024!";
-		private static string clientID = "2c45fe93-3daa-40b2-9533-e2fd19df7dc3";
+		private static string username = "";
+		private static string password = "";
+		private static string clientID = "";
 		//in region 7 and 15.
 
 		private DNFinder dnFinder;
@@ -132,6 +132,7 @@ namespace UserMaker
 		{
 			if (RMBox.SelectedItem != null)
 			{
+
 				UserInformation selectedUser = (UserInformation)RMBox.SelectedItem;
 				string displayName = selectedUser.DisplayName;
 				string distinguishedName = selectedUser.DistinguishedName;
@@ -155,11 +156,14 @@ namespace UserMaker
 		}
 		private void addressList_BtnClick(object sender, EventArgs e)
 		{
+			// check if this form is already open.
 			addressCSV existingForm = Application.OpenForms.OfType<addressCSV>().FirstOrDefault();
 			if (existingForm != null)
 			{
 				existingForm.BringToFront();
 			}
+			
+			
 			else
 			{
 
@@ -278,7 +282,7 @@ namespace UserMaker
 			}
 
 			// Initialize DirectoryEntry and DirectorySearcher objects
-			using (DirectoryEntry entry = new DirectoryEntry("LDAP://internal.detmold.com.au"))
+			using (DirectoryEntry entry = new DirectoryEntry("LDAP://com.au"))
 			using (DirectorySearcher searcher = new DirectorySearcher(entry))
 			{
 				// Set the filter to search for user with the provided UPN
@@ -309,6 +313,7 @@ namespace UserMaker
 		private async void searchTicket_btnClick(object sender, EventArgs e)
 		{
 			string ticketID = ticketID_textbox.Text;
+
 			if (string.IsNullOrEmpty(ticketID))
 			{
 				MessageBox.Show("Enter the ticket ID", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -450,7 +455,7 @@ namespace UserMaker
 
 						#endregion
 
-						#region 7.3. To use company name for the searching the domain 
+						#region 7.3. To use the company name for searching the domain 
 						if (field.name == "CFEmployeeCompany")
 						{
 
@@ -472,7 +477,7 @@ namespace UserMaker
 
 					if (!isNewUserRequest)
 					{
-						ticketInfo += "This ticket is not a new user request";
+						ticketInfo += "This ticket is not a New User Request";
 					}
 
 					MessageBox.Show(ticketInfo, "Ticket Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -574,7 +579,7 @@ namespace UserMaker
 				UPN = inputFNAME.Text + "." + inputLNAME.Text + "@" + domainList.Text;
 				Pre2000 = inputFNAME.Text + "." + inputLNAME.Text;
 			}
-			using (DirectoryEntry entry = new DirectoryEntry("LDAP://internal.detmold.com.au"))
+			using (DirectoryEntry entry = new DirectoryEntry("LDAP:com.au"))
 			using (DirectorySearcher searcher = new DirectorySearcher(entry))
 			{
 				// Set the filter to search for user with the provided UPN
@@ -662,9 +667,9 @@ namespace UserMaker
 				else
 				{
 					#region 8.2.1. [REGIONAL MANAGER ATTRIBUTE] Previously selected regional manager from the list and updated the attribute 
-					//but now this may not be need as we have loaded the manager name from the ticket and have created generated the DN name.
-					//We have retrieved the DN of the manager from the reginal manager class.
-					//update 1: regional manager will be supplied through the regional manager list selection if the ticket returns empty manager name
+					//but now this may not be needed as we have loaded the manager name from the ticket and have generated the DN name.
+					//We have retrieved the DN of the manager from the regional manager class.
+					//update 1: regional manager will be supplied through the regional manager list selection only if the ticket returns empty manager name
 
 					if (RMBox.SelectedItem != null)
 					{
@@ -822,36 +827,37 @@ namespace UserMaker
 		#region 11. Generating unique passsword and code for the checkbox
 		private void checkBox1_CheckedChanged(object sender, EventArgs e)
 		{
-			//clear passwordtextbox when the check box is unchecked
-
-			if (!passwordCheckBox.Checked)
-			{
-				// Clear the text of the passwordBox
-				passwordBox.Text = "";
-			}
-			//same if statement is also written after the password generater code below
-
-
-
+		
 			// Set the desired length of the password
-			int length = 12; // Example length
+			int length = 15;
+			; // Example length
 
 			// Generate the password
 			string password = CreatePassword(length);
 
-			passwordBox.Text = password;   //filling the password text box with the newly generated password
+
+			passwordBox.Text = password; //filling the password text box with the newly generated password
 
 			string CreatePassword(int length) //random password generator
 			{
-				const string valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~!@#$%^&*()_+";
+				const string valid = "1234567890~!@#$%^&*()_-=+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+				
+				
 				StringBuilder res = new StringBuilder(); // Changed StringBuilder declaration
+				
+				
 				Random rnd = new Random();
+				
 				while (0 < length--)
 				{
 					res.Append(valid[rnd.Next(valid.Length)]);
+
 				}
-				return res.ToString();
+
+
+				return res.ToString(); ;
 			}
+			
 			//clear passwordtextbox when the check box is unchecked
 			if (!passwordCheckBox.Checked)
 			{
@@ -903,6 +909,7 @@ namespace UserMaker
 
 		}
 		#region some more Event Handlers for various text boxes
+
 		private void progressBar1_Click(object sender, EventArgs e)
 		{
 
@@ -1004,6 +1011,7 @@ namespace UserMaker
 				OUBox.Items.AddRange(organizationalUnits);
 				//MessageBox.Show(organizationalUnits);
 			}
+
 			else
 			{
 				MessageBox.Show("Failed to retrieve organizational units data.");
@@ -1141,7 +1149,8 @@ namespace UserMaker
 
 			//string password = passwordBox.Text;
 
-			adminForm existingAdminForm = Application.OpenForms.OfType<adminForm>().FirstOrDefault(); //check if the adminForm is already open.
+			adminForm existingAdminForm = Application.OpenForms.OfType<adminForm>().FirstOrDefault();
+			//check if the adminForm is already open.
 
 			if (existingAdminForm != null)
 			{
@@ -1161,10 +1170,7 @@ namespace UserMaker
 
 		}
 
-		private void ProgressbarLabel(object sender, EventArgs e)
-		{
-
-		}
+		
 	}
 
 	#region classes for ticket information retireval from the Halo API
