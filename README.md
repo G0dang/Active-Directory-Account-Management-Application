@@ -37,7 +37,7 @@ Guide to use user creation windows application
 
 The purpose of this application is to create a new user in the Active Directory. Users can manually enter the user details or load them from the "New User Request" ticket via the Halo API. 
 
->  Note: This aplication has also been recreated in Windows Preentation Foundation (WPF) UI framework.
+>  Note: This aplication has also been recreated in Windows Presentation Foundation (WPF) UI framework.
 
 ## Steps to Create a New User
 ### Search or Enter Details:
